@@ -18,24 +18,19 @@ import {
   StyleSheet,
 } from 'react-native';
 import population from '../asset/population.json';
-import { useNavigation, useScrollToTop } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 // import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
+// import { createClient } from '@supabase/supabase-js'
+// import 'react-native-url-polyfill/auto' // nếu bạn dùng React Native CLI
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export function Population() {
-  // useEffect(() => {
-  //  async function search() {
-  //     const { data, error } = await supabase
-  //   .from('population')
-  //   .select('*')
-  //   .limit(10)
-  //    console.log('data',data)
-  //    console.log('error',error)
-  //   }
-
-  //   search()
-  // }, [input])
+// const supabase = createClient('https://feuakoaglemujpwsspie.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZldWFrb2FnbGVtdWpwd3NzcGllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1Njg5NjYsImV4cCI6MjA3NTE0NDk2Nn0.kduWT_6GWnSyXKNCLPzGn1zcUaYO24Rtnx7fN9wtoO0', {
+//   auth: { storage: AsyncStorage },
+// });
 
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
@@ -58,21 +53,13 @@ export function Population() {
 
   let data = population;
   useEffect(() => {
-    // RNFS.exists(`${externalDirectoryPath}/population.json`).then(fileExist => {
-    //   if (fileExist) {
-    //     RNFS.readFile(`${externalDirectoryPath}/population.json`).then(
-    //       dataExternal => {
-    //         data = JSON.parse(dataExternal);
-    //       },
-    //     );
-    //   } else {
-    //     data = population;
-    //   }
-    // });
-    //     if (ScrollViewToScroll.current) {
-    //   HomeScreen.updateHomeRef(ScrollViewToScroll.current);
-    // }
-  }, []);
+
+  async function getUser() {
+    const { data: user } = await supabase.auth.getUser();
+    console.log('auth.uid():', user.user?.id);
+  }  
+  getUser()
+}, []);
 
   function Item({ item, index }) {
     return (
@@ -179,13 +166,6 @@ export function Population() {
     'TENME',
   ];
 
-  let titelForDropdown = [];
-
-  // useEffect(() => {
-  //   console.log('titleFilter1', titleFilter1);
-  //   console.log('titleFilter2', titleFilter2);
-  //   console.log('titleFilter3', titleFilter3);
-  // }, [titleFilter1, titleFilter2, titleFilter3]);
 
   return (
     <>

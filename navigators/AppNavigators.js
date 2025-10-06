@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Population } from '../screen/population';
 import { Crime } from '../screen/crime';
 import { GetOneFamily } from '../screen/getOneFamily';
+import { Login } from '../screen/login';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -165,6 +166,16 @@ const StackNavigator = () => {
           headerShadowVisible: false,
         }}
       >
+
+                {/* <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{
+            header: () => null,
+          }}
+        /> */}
+
+
         <Stack.Screen
           name="HomeStack"
           component={AppNavigators}
