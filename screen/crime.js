@@ -16,6 +16,7 @@ import { Table, Row, Rows } from 'react-native-table-component';
 // import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
+import {Item} from './component/item.js'
 
 export function Crime() {
   const [input1, setInput1] = useState('');
@@ -35,171 +36,171 @@ export function Crime() {
 
   // let data = crime;
 
-  let tableHead = [
-    'STT',
-    'Tội danh',
-    'Thời hạn',
-    'Ngày bắt',
-    'Ngày CH xong:',
-    'Nơi CH',
-  ];
-  let widthArr = ['8%', '30%', '15%', '15%', '15%', '17%'];
 
-  function Item({ item, index }) {
+//   function Item({ item, index }) {
     
+//     const { data, error } = supabase
+//       .storage
+//       .from("imageCrime")
+//       .getPublicUrl('subject/'+item['CCCD']+".jpg");
 
-let imageErrorUrl = "../asset/unknow.jpg"; // ảnh mặc định của bạn
-
-    const { data, error } = supabase
-      .storage
-      .from("imageCrime")
-      .getPublicUrl('subject/'+item['CCCD']+".jpg");
-
-      // console.log("Public URL:", data.publicUrl);
-      console.log("Error:", error)
+//       // console.log("Public URL:", data);
+//       // console.log("Error:", error)
       
-      // console.log("CCCD:", item['CCCD']);
 
+// async function checkImageExists(url) {
+//   try {
+//     const response = await fetch(url, { method: "HEAD" });
+//     return response.ok; // true nếu tồn tại, false nếu 404
+//   } catch (err) {
+//     return false;
+//   }
+// }
 
+// let imageExists = false
 
-    
+// checkImageExists(data.publicUrl).then(value => {
+//   imageExists = (value); // đây là giá trị thật
+// });
 
+//   console.log('Image exists:', imageExists);
+  
 
-    let chargeArr = item['CHARGE']?.split(';');
-    let fullInfoCrime = [];
+//     let chargeArr = item['CHARGE']?.split(';');
+//     let fullInfoCrime = [];
 
-    for (let a = 0; a < chargeArr?.length; a++) {
-      fullInfoCrime.push([
-        [a + 1],
-        item['CHARGE']?.split(';')[a] ? item['CHARGE']?.split(';')[a] : '',
-        item['JUDGMENT']?.split(';')[a] ? item['JUDGMENT']?.split(';')[a] : '',
-        item['DAYARRES']?.split(';')[a] ? item['DAYARRES']?.split(';')[a] : '',
-        item['FREEDAY']?.split(';')[a] ? item['FREEDAY']?.split(';')[a] : '',
-        item['DETENTION']?.split(';')[a]
-          ? item['DETENTION']?.split(';')[a]
-          : '',
-      ]);
-    }
+//     for (let a = 0; a < chargeArr?.length; a++) {
+//       fullInfoCrime.push([
+//         [a + 1],
+//         item['CHARGE']?.split(';')[a] ? item['CHARGE']?.split(';')[a] : '',
+//         item['JUDGMENT']?.split(';')[a] ? item['JUDGMENT']?.split(';')[a] : '',
+//         item['DAYARRES']?.split(';')[a] ? item['DAYARRES']?.split(';')[a] : '',
+//         item['FREEDAY']?.split(';')[a] ? item['FREEDAY']?.split(';')[a] : '',
+//         item['DETENTION']?.split(';')[a]
+//           ? item['DETENTION']?.split(';')[a]
+//           : '',
+//       ]);
+//     }
 
-    return (
-      <View
-        style={{
-          flexDirection: 'collumn',
-          backgroundColor: index % 2 ? '#CCCCCC' : 'white',
-          marginTop: 10,
-          flexWrap: 'wrap',
-          padding: 10,
-          borderWidth: 2,
-          borderColor: 'black',
-          borderRadius: 5,
-          justifyContent: 'space-between',
-        }}
-      >
-        <View style={{ flexDirection: 'row' }}>
-          <Text style={{ fontWeight: 'bold' }}>
-            Số thứ tự: <Text style={{ fontWeight: '400' }}>{index}</Text>
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            marginBottom: 10,
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Họ và tên: <Text style={{ color: 'red' }}>{item['HOTEN']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Tên khác:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['TENKHAC']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Ngày sinh:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['NAMSINH']}</Text>
-            </Text>
+//     return (
+//       <View
+//         style={{
+//           flexDirection: 'collumn',
+//           backgroundColor: index % 2 ? '#CCCCCC' : 'white',
+//           marginTop: 10,
+//           flexWrap: 'wrap',
+//           padding: 10,
+//           borderWidth: 2,
+//           borderColor: 'black',
+//           borderRadius: 5,
+//           justifyContent: 'space-between',
+//         }}
+//       >
+//         <View style={{ flexDirection: 'row' }}>
+//           <Text style={{ fontWeight: 'bold' }}>
+//             Số thứ tự: <Text style={{ fontWeight: '400' }}>{index}</Text>
+//           </Text>
+//         </View>
+//         <View
+//           style={{
+//             flexDirection: 'row',
+//             width: '100%',
+//             justifyContent: 'space-between',
+//             marginBottom: 10,
+//           }}
+//         >
+//           <View style={{ flex: 1 }}>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Họ và tên: <Text style={{ color: 'red' }}>{item['HOTEN']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Tên khác:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['TENKHAC']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Ngày sinh:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['NAMSINH']}</Text>
+//             </Text>
 
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Giới tính:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['GIOITINH'] ? 'NAM' : 'NỮ'}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Số ĐDCN: <Text style={{ fontWeight: '400' }}>{item['CCCD']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Tên cha:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['TENCHA']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Tên mẹ: <Text style={{ fontWeight: '400' }}>{item['TENME']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Dân tộc:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['DANTOC']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Tôn giáo:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['TONGIAO']}</Text>
-            </Text>
-            <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
-              Địa chỉ:{' '}
-              <Text style={{ fontWeight: '400' }}>{item['NOITHTRU']}</Text>
-            </Text>
-          </View>
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              // backgroundColor: 'yellow',
-            }}
-          >
-            <Image
-              style={{ width: '100%', height: 200 }}
-              source={{
-                uri:  !error ? data.publicUrl : imageErrorUrl,
-              }}
-            />
-          </View>
-        </View>
-        <View>
-          <Table borderStyle={{ borderWidth: 2, borderColor: '#c8e1ff' }}>
-            <Row
-              data={tableHead}
-              widthArr={widthArr}
-              style={{ backgroundColor: '#f1f8ff' }}
-              textStyle={{
-                margin: 6,
-                fontWeight: 'bold',
-                textAlign: 'center',
-                fontSize: 12,
-              }}
-            />
-          </Table>
-          <Table borderStyle={{ borderWidth: 1, borderColor: '#C1C0B9' }}>
-            {fullInfoCrime.map((rowData, index) => {
-              return (
-                <Row
-                  key={index}
-                  data={rowData}
-                  widthArr={widthArr}
-                  style={
-                    rowData &&
-                    (rowData[1].includes('?') || rowData[4].includes('?'))
-                      ? { backgroundColor: '#c48207ff' }
-                      : { backgroundColor: '#f1f8ff' }
-                  }
-                  textStyle={{ margin: 4, fontSize: 10, textAlign: 'center' }}
-                />
-              );
-            })}
-          </Table>
-        </View>
-      </View>
-    );
-  }
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Giới tính:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['GIOITINH'] ? 'NAM' : 'NỮ'}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Số ĐDCN: <Text style={{ fontWeight: '400' }}>{item['CCCD']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Tên cha:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['TENCHA']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Tên mẹ: <Text style={{ fontWeight: '400' }}>{item['TENME']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Dân tộc:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['DANTOC']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Tôn giáo:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['TONGIAO']}</Text>
+//             </Text>
+//             <Text style={{ marginRight: 10, fontWeight: 'bold' }}>
+//               Địa chỉ:{' '}
+//               <Text style={{ fontWeight: '400' }}>{item['NOITHTRU']}</Text>
+//             </Text>
+//           </View>
+//           <View
+//             style={{
+//               flex: 1,
+//               justifyContent: 'center',
+//               alignItems: 'center',
+//               // backgroundColor: 'yellow',
+//             }}
+//           >
+//             <Image
+//               style={{ width: '100%', height: 200 }}
+//               source={
+//                   imageExists ? {uri:data.publicUrl} : require('../asset/unknow.jpg')
+//               }
+//             />
+//           </View>
+//         </View>
+//         <View>
+//           <Table borderStyle={{ borderWidth: 2, borderColor: '#c8e1ff' }}>
+//             <Row
+//               data={tableHead}
+//               widthArr={widthArr}
+//               style={{ backgroundColor: '#f1f8ff' }}
+//               textStyle={{
+//                 margin: 6,
+//                 fontWeight: 'bold',
+//                 textAlign: 'center',
+//                 fontSize: 12,
+//               }}
+//             />
+//           </Table>
+//           <Table borderStyle={{ borderWidth: 1, borderColor: '#C1C0B9' }}>
+//             {fullInfoCrime.map((rowData, index) => {
+//               return (
+//                 <Row
+//                   key={index}
+//                   data={rowData}
+//                   widthArr={widthArr}
+//                   style={
+//                     rowData &&
+//                     (rowData[1].includes('?') || rowData[4].includes('?'))
+//                       ? { backgroundColor: '#c48207ff' }
+//                       : { backgroundColor: '#f1f8ff' }
+//                   }
+//                   textStyle={{ margin: 4, fontSize: 10, textAlign: 'center' }}
+//                 />
+//               );
+//             })}
+//           </Table>
+//         </View>
+//       </View>
+//     );
+//   }
 
   async function pushToSearch() {
     global.SearchCrimeRef && global.SearchCrimeRef.scrollToOffset({ offset: 0 });
@@ -668,6 +669,8 @@ let imageErrorUrl = "../asset/unknow.jpg"; // ảnh mặc định của bạn
       >
         {searchResutl.length ? (
           <FlatList
+                      onScrollBeginDrag={() => Keyboard.dismiss()}
+
             ref={ref => {
               global.SearchCrimeRef = ref;
             }}

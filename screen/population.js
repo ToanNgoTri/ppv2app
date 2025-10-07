@@ -524,6 +524,8 @@ export function Population() {
       >
         {searchResult.length ? (
           <FlatList
+                      onScrollBeginDrag={() => Keyboard.dismiss()}
+
             // ref={()=>{FlatListToScroll}}
             ref={ref => {
               global.SearchPopulationRef = ref;
