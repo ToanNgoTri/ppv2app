@@ -167,14 +167,14 @@ const StackNavigator = () => {
         }}
       >
 
-                <Stack.Screen
+                {/* <Stack.Screen
           name="Login"
           component={Login}
           options={{
             header: () => null,
           }}
         />
-
+ */}
 
         <Stack.Screen
           name="HomeStack"
