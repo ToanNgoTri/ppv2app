@@ -52,7 +52,8 @@ export function GetOneFamily() {
 function Item({ item, index }) {
   const isSelected = route.params.CCCD === item['CCCD'];
   const isEven = index % 2 === 0;
-
+  console.log();
+  
   return (
     <View
       style={{
@@ -113,7 +114,7 @@ function Item({ item, index }) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         <Text style={styles.infoText}>Ngày sinh: {item['NAMSINH']}</Text>
         <Text style={styles.infoText}>
-          Giới tính: {item['GIOITINH'] === 'TRUE' ? 'Nam' : 'Nữ'}
+          Giới tính: {item['GIOITINH'] === true ? 'Nam' : 'Nữ'}
         </Text>
         <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
         <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>

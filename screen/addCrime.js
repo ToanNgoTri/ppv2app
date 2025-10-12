@@ -219,7 +219,7 @@ export function AddCrime() {
   }, [dataCCCD]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={{...styles.container,padding: 10 + insets.top}}>
       <Text style={styles.header}>📋 THÔNG TIN CÔNG DÂN</Text>
       <View style={styles.formContainer}>
 {Object.entries({
@@ -286,7 +286,7 @@ export function AddCrime() {
   );
 }
 const styles = StyleSheet.create({
-  container: { padding: 20 + insets.top, backgroundColor: '#F8FAFC' },
+  container: {  backgroundColor: '#F8FAFC' },
   header: {
     fontSize: 22,
     fontWeight: 'bold',
