@@ -1,5 +1,5 @@
 package com.ppapp
-
+import com.rnfs.RNFSPackage;
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled

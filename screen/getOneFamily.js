@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, FlatList } from 'react-native';
+import { Text, View, FlatList,StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 // import RNFS from 'react-native-fs';
-import { useNavigation, useScrollToTop } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 
@@ -49,76 +49,81 @@ export function GetOneFamily() {
     fetchData();
   }, [route.params.screen, navigation]);
 
-  function Item({ item, index }) {
-    return (
+function Item({ item, index }) {
+  const isSelected = route.params.CCCD === item['CCCD'];
+  const isEven = index % 2 === 0;
+
+  return (
+    <View
+      style={{
+        backgroundColor: isSelected
+          ? '#FFD580' // màu vàng nhạt nổi bật khi trùng CCCD
+          : isEven
+          ? '#F8F9FA'
+          : '#E9ECEF',
+        marginVertical: 6,
+        padding: 14,
+        borderRadius: 12,
+        borderWidth: isSelected ? 2 : 1,
+        borderColor: isSelected ? '#FFA500' : '#CED4DA',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+      }}
+    >
+      {/* Dòng trên cùng: STT + Quan hệ */}
       <View
         style={{
-          flexDirection: 'collumn',
-          backgroundColor:
-            route.params.CCCD == item['CCCD']
-              ? 'orange'
-              : index % 2
-              ? '#CCCCCC'
-              : '#white',
-          marginTop: 10,
-          flexWrap: 'wrap',
-          padding: 10,
-          borderWidth: 2,
-          borderColor: 'black',
-          borderRadius: 5,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginBottom: 6,
         }}
       >
-        <View>
-          <Text>STT: {index + 1}</Text>
-        </View>
+        <Text style={{ fontSize: 12, color: '#6C757D' }}>STT: {index + 1}</Text>
 
-        <Text style={{ marginRight: 10 }}>
-          Quan hệ:{' '}
-          {item['QUANHE'] == 'CH' ? (
-            <Text style={{ fontWeight: 'bold', backgroundColor: 'yellow' }}>
-              {item['QUANHE']}
-            </Text>
-          ) : (
-            item['QUANHE']
-          )}
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: item['QUANHE'] === 'CH' ? '700' : '500',
+            color: item['QUANHE'] === 'CH' ? '#B71C1C' : '#495057',
+            backgroundColor: item['QUANHE'] === 'CH' ? '#FFF176' : 'transparent',
+            paddingHorizontal: 8,
+            borderRadius: 6,
+          }}
+        >
+          Quan hệ: {item['QUANHE']}
         </Text>
-        <Text style={{ marginRight: 10 }}>
-          Họ và tên: <Text style={{ fontWeight: 'bold' }}>{item['HOTEN']}</Text>
-        </Text>
-
-        <Text style={{ marginRight: 10 }}>Ngày sinh: {item['NAMSINH']}</Text>
-
-        <Text style={{ marginRight: 10 }}>
-          Giới tính: {item['GIOITINH'] == 'TRUE' ? 'Nam' : 'Nữ'}
-        </Text>
-        <Text style={{ marginRight: 10 }}>Tên cha: {item['TENCHA']}</Text>
-        <Text style={{ marginRight: 10 }}>Tên mẹ: {item['TENME']}</Text>
-        <Text style={{ marginRight: 10 }}>Dân tộc: {item['DANTOC']}</Text>
-        <Text style={{ marginRight: 10 }}>Tôn giáo: {item['TONGIAO']}</Text>
-        <Text style={{ marginRight: 10 }}>Số ĐDCN: {item['CCCD']}</Text>
       </View>
-    );
-  }
 
-  useEffect(() => {
-    // RNFS.exists(`${externalDirectoryPath}/population.json`).then(fileExist => {
-    //   console.log('fileExist', fileExist);
+      {/* Họ và tên */}
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: '700',
+          color: '#212529',
+          marginBottom: 4,
+        }}
+      >
+        {item['HOTEN']}
+      </Text>
 
-    //   if (fileExist) {
-    //     RNFS.readFile(`${externalDirectoryPath}/population.json`).then(
-    //       dataExternal => {
-    //         data = JSON.parse(dataExternal);
-    //         console.log('data0', data);
-    //         Filter();
-    //       },
-    //     );
-    //   } else {
-    //     data = population;
-    //     console.log('data1');
-    //     Filter();
-    //   }
-    // });
-  }, []);
+      {/* Các thông tin chi tiết */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <Text style={styles.infoText}>Ngày sinh: {item['NAMSINH']}</Text>
+        <Text style={styles.infoText}>
+          Giới tính: {item['GIOITINH'] === 'TRUE' ? 'Nam' : 'Nữ'}
+        </Text>
+        <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
+        <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
+        <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
+        <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
+        <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
+      </View>
+    </View>
+  );
+}
 
   return (
     <>
@@ -159,3 +164,12 @@ export function GetOneFamily() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  infoText: {
+    fontSize: 13,
+    color: '#495057',
+    width: '50%', // chia 2 cột
+    marginBottom: 4,
+  }
+})
