@@ -134,7 +134,7 @@ export function Item({ item, index, location }) {
         }}
       >
         <Text style={{ fontWeight: 'bold', color: '#0D6EFD' }}>
-          {index + 1}. {item['HOTEN']}
+          {index}. {item['HOTEN']}
         </Text>
         <Text style={{ color: '#6C757D', fontSize: 12 }}>
           {item['CCCD']}

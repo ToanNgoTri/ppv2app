@@ -94,7 +94,7 @@ function Item({ item, index }) {
           marginBottom: 6,
         }}
       >
-        <Text style={{ fontSize: 12, color: '#6C757D' }}>STT: {index + 1}</Text>
+        <Text style={{ fontSize: 12, color: '#6C757D' }}>STT: {index}</Text>
         <Text style={{ fontSize: 12, color: '#6C757D' }}>
           Số HSHK: {item['SOHOK']}
         </Text>
