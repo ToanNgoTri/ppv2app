@@ -1,4 +1,4 @@
-import React, { useEffect, useState ,useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   TextInput,
   Image,
   Alert,
-  Keyboard
+  Keyboard,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +16,6 @@ import { supabase } from './lib.js';
 import { decode } from 'base64-arraybuffer';
 import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 
 export function AddCrime() {
   const [form, setForm] = useState({
@@ -48,9 +47,9 @@ export function AddCrime() {
 
   const inputRefs = useRef([]);
   console.log('imageURL', imageURL);
+  const scrollViewRef = useRef(null);
 
-    const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
-
+  const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
   const handleChange = (key, value) => {
     if (key == 'GIOITINH') {
@@ -64,12 +63,17 @@ export function AddCrime() {
   };
 
   function openCamera() {
-    navigation.push('Camera', {
-      onGoBack: data =>
-        'qrValue' in data
-          ? setDataCCCD(data['qrValue'])
-          : setImageURL(data['photo']), // callback nhận dữ liệu
-    });
+navigation.push('Camera', {
+    onGoBack: data => {
+      if ('qrValue' in data) {
+        setDataCCCD(data['qrValue']);
+         setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }, 300);
+      } else {
+        setImageURL(data['photo']);
+      }
+    }})
   }
 
   function parseCitizenData(str) {
@@ -141,43 +145,39 @@ export function AddCrime() {
   //   }
 
   async function saveData(params) {
-    console.log('form.CCCD',form.CCCD.length);
-    
-    if(!form.CCCD == ''){
-    let uploadIMG = await uploadImage();
+    console.log('form.CCCD', form.CCCD.length);
 
-        const { data, error } = await supabase
-      .from('addCrime')
-      .insert([
-        form
-      ]);
+    if (!form.CCCD == '') {
+      let uploadIMG = await uploadImage();
+
+      const { data, error } = await supabase.from('addCrime').insert([form]);
       Alert.alert('Thành công', `Thông tin đã được thêm`);
 
-        if (error) {
-      console.log('Lỗi khi thêm:', error);
-      return null;
-    }
-    setForm({
-    HOTEN: '',
-    TENKHAC: '',
-    NAMSINH: '',
-    GIOITINH: true,
-    CCCD: '',
-    TENCHA: '',
-    TENME: '',
-    DANTOC: '',
-    TONGIAO: '',
-    NOITHTRU: '',
-    CHARGE: '',
-    JUDGMENT: '',
-    DAYARRES: '',
-    FREEDAY: '',
-    DETENTION: '',
-    LOCATION: '',
-    SOHOK: '',
-  })
-      setImageURL(null)
-    }else{
+      if (error) {
+        console.log('Lỗi khi thêm:', error);
+        return null;
+      }
+      setForm({
+        HOTEN: '',
+        TENKHAC: '',
+        NAMSINH: '',
+        GIOITINH: true,
+        CCCD: '',
+        TENCHA: '',
+        TENME: '',
+        DANTOC: '',
+        TONGIAO: '',
+        NOITHTRU: '',
+        CHARGE: '',
+        JUDGMENT: '',
+        DAYARRES: '',
+        FREEDAY: '',
+        DETENTION: '',
+        LOCATION: '',
+        SOHOK: '',
+      });
+      setImageURL(null);
+    } else {
       Alert.alert('Thông báo', `Thiếu số Định danh cá nhân`);
     }
     // return data;
@@ -218,53 +218,67 @@ export function AddCrime() {
     }
   }, [dataCCCD]);
 
+  // useEffect(() => {
+  //   console.log('dataCCCD', dataCCCD);
+  //   console.log('scrollViewRef.current', scrollViewRef.current);
+
+  //   if (dataCCCD) {
+  //     setTimeout(() => {
+  //       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  //     }, 300);
+  //   }
+  // }, [dataCCCD]);
+
+
+
   return (
-    <ScrollView contentContainerStyle={{...styles.container,padding: 10 + insets.top}}>
-      <Text style={styles.header}>📋 THÔNG TIN CÔNG DÂN</Text>
+    <ScrollView
+      contentContainerStyle={{ ...styles.container, padding: 10 + insets.top }}
+      ref={scrollViewRef}
+    >
+      <View>
+        <Text style={styles.header}>📋 THÔNG TIN CÔNG DÂN</Text>
+      </View>
       <View style={styles.formContainer}>
-{Object.entries({
-  HOTEN: 'Họ và tên',
-  TENKHAC: 'Tên khác',
-  NAMSINH: 'Ngày sinh',
-  GIOITINH: 'Giới tính',
-  CCCD: 'Số định danh cá nhân',
-  TENCHA: 'Tên cha',
-  TENME: 'Tên mẹ',
-  DANTOC: 'Dân tộc',
-  TONGIAO: 'Tôn giáo',
-  NOITHTRU: 'Địa chỉ',
-  TOIDANH: 'Tội danh',
-  THOIHAN: 'Thời hạn',
-  NGAYBAT: 'Ngày bắt',
-  NGAYCHXONG: 'Ngày chấp hành xong',
-  NOICH: 'Nơi chấp hành',
-  LOCATION: 'Vị trí nơi ở',
-}).map(([key, label], index, arr) => (
-  <View key={key} style={styles.inputGroup}>
-    <Text style={styles.label}>{label}</Text>
-    <TextInput
-
-                  autoCapitalize="characters"
+        {Object.entries({
+          HOTEN: 'Họ và tên',
+          TENKHAC: 'Tên khác',
+          NAMSINH: 'Ngày sinh',
+          GIOITINH: 'Giới tính',
+          CCCD: 'Số định danh cá nhân',
+          TENCHA: 'Tên cha',
+          TENME: 'Tên mẹ',
+          DANTOC: 'Dân tộc',
+          TONGIAO: 'Tôn giáo',
+          NOITHTRU: 'Địa chỉ',
+          TOIDANH: 'Tội danh',
+          THOIHAN: 'Thời hạn',
+          NGAYBAT: 'Ngày bắt',
+          NGAYCHXONG: 'Ngày chấp hành xong',
+          NOICH: 'Nơi chấp hành',
+          LOCATION: 'Vị trí nơi ở',
+        }).map(([key, label], index, arr) => (
+          <View key={key} style={styles.inputGroup}>
+            <Text style={styles.label}>{label}</Text>
+            <TextInput
+              autoCapitalize="characters"
               placeholder={`Nhập ${label.toLowerCase()}...`}
-
-
-
-      ref={el => (inputRefs.current[index] = el)} // ✅ lưu ref từng ô
-      returnKeyType={index === arr.length - 1 ? 'done' : 'next'}
-      onSubmitEditing={() => {
-        if (index < arr.length - 1) {
-          inputRefs.current[index + 1]?.focus(); // 👉 nhảy xuống ô tiếp theo
-        } else {
-          Keyboard.dismiss(); // nếu là ô cuối thì đóng bàn phím
-        }
-      }}
-      submitBehavior="submit" // giữ focus khi nhấn "Next"
-      style={styles.input}
-      value={form[key]}
-      onChangeText={v => handleChange(key, v)}
-    />
-  </View>
-))}
+              ref={el => (inputRefs.current[index] = el)}
+              returnKeyType={index === arr.length - 1 ? 'done' : 'next'}
+              onSubmitEditing={() => {
+                if (index < arr.length - 1) {
+                  inputRefs.current[index + 1]?.focus(); // 👉 nhảy xuống ô tiếp theo
+                } else {
+                  Keyboard.dismiss(); // nếu là ô cuối thì đóng bàn phím
+                }
+              }}
+              submitBehavior="submit" // giữ focus khi nhấn "Next"
+              style={styles.input}
+              value={form[key]}
+              onChangeText={v => handleChange(key, v)}
+            />
+          </View>
+        ))}
 
         <View style={[styles.inputGroup, { alignItems: 'center' }]}>
           <Image
@@ -286,7 +300,7 @@ export function AddCrime() {
   );
 }
 const styles = StyleSheet.create({
-  container: {  backgroundColor: '#F8FAFC' },
+  container: { backgroundColor: '#F8FAFC' },
   header: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -340,5 +354,3 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-
-

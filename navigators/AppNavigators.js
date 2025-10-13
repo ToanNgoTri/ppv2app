@@ -37,57 +37,120 @@ function CustomTabBar({ navigation, state }) {
         borderTopColor: '#2c2c2c',
         height: 58 + insets.bottom / 3,
         paddingBottom: insets.bottom / 3,
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}
     >
-      {tabs.map((tab, index) => {
-        const isActive = state.index === index;
-        return (
-          <TouchableOpacity
-            key={tab.name}
-            activeOpacity={0.8}
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRightWidth: index < tabs.length - 1 ? 0.6 : 0,
-              borderRightColor: '#333',
-              backgroundColor: isActive ? '#1a1a1a' : '#111',
-            }}
-            onPress={() => {
-              navigation.navigate(tab.name);
-              if (isActive && global[tab.ref]) {
-                global[tab.ref].scrollToOffset({ offset: 0 });
-              }
-            }}
-          >
-            <Animated.Text
-              style={{
-                color: isActive ? '#00c853' : '#bdbdbd',
-                fontSize: isActive ? 15 : 13,
-                fontWeight: isActive ? 'bold' : '500',
-                textAlign: 'center',
-              }}
-            >
-              {tab.name}
-            </Animated.Text>
-            {isActive && (
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  width: '60%',
-                  height: 3,
-                  borderRadius: 2,
-                  backgroundColor: '#00c853',
-                }}
-              />
-            )}
-          </TouchableOpacity>
-        );
-      })}
+      {/* Tab 1 */}
+      <TabItem
+        tab={tabs[0]}
+        index={0}
+        state={state}
+        navigation={navigation}
+        totalTabs={tabs.length}
+      />
+
+      {/* Tab 2 */}
+      <TabItem
+        tab={tabs[1]}
+        index={1}
+        state={state}
+        navigation={navigation}
+        totalTabs={tabs.length}
+      />
+
+      {/* 🔸 Nút giữa mở Camera */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('Camera')}
+        style={{
+          width: 55,
+          height: 55,
+          borderRadius: 40,
+          backgroundColor: '#00c853',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 20, // tạo hiệu ứng nổi
+          shadowColor: '#00c853',
+          shadowOpacity: 0.6,
+          shadowOffset: { width: 0, height: 4 },
+          shadowRadius: 6,
+          elevation: 6,
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 26 }}>📷</Text>
+      </TouchableOpacity>
+
+      {/* Tab 3 */}
+      <TabItem
+        tab={tabs[2]}
+        index={2}
+        state={state}
+        navigation={navigation}
+        totalTabs={tabs.length}
+      />
+
+      {/* Tab 4 */}
+      <TabItem
+        tab={tabs[3]}
+        index={3}
+        state={state}
+        navigation={navigation}
+        totalTabs={tabs.length}
+      />
     </View>
   );
 }
+
+// ================================
+// Tách TabItem để gọn hơn
+// ================================
+const TabItem = ({ tab, index, state, navigation, totalTabs }) => {
+  const isActive = state.index === index;
+  return (
+    <TouchableOpacity
+      key={tab.name}
+      activeOpacity={0.8}
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRightWidth: index < totalTabs - 1 ? 0.6 : 0,
+        borderRightColor: '#333',
+        backgroundColor: isActive ? '#1a1a1a' : '#111',
+      }}
+      onPress={() => {
+        navigation.navigate(tab.name);
+        if (isActive && global[tab.ref]) {
+          global[tab.ref].scrollToOffset({ offset: 0 });
+        }
+      }}
+    >
+      <Animated.Text
+        style={{
+          color: isActive ? '#00c853' : '#bdbdbd',
+          fontSize: isActive ? 15 : 13,
+          fontWeight: isActive ? 'bold' : '500',
+          textAlign: 'center',
+        }}
+      >
+        {tab.name}
+      </Animated.Text>
+      {isActive && (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            width: '60%',
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: '#00c853',
+          }}
+        />
+      )}
+    </TouchableOpacity>
+  );
+};
 
 // ================================
 // Bottom Tab Navigator
@@ -121,7 +184,6 @@ const StackNavigator = () => {
         headerShadowVisible: false,
       }}
     >
-
       <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
 
       <Stack.Screen
@@ -130,8 +192,11 @@ const StackNavigator = () => {
         options={{ headerShown: false }}
       />
 
-
-      <Stack.Screen name="Camera" component={CameraComponent} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Camera"
+        component={CameraComponent}
+        options={{ headerShown: false }}
+      />
 
       <Stack.Screen
         name="getOneFamily"

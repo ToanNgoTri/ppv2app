@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import {
   Camera,
   useCameraDevice,
@@ -9,6 +9,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
+import { supabase } from '../lib.js';
+
 
 export function CameraComponent() {
   const [qrValue, setQrValue] = useState(null);
@@ -28,8 +30,10 @@ export function CameraComponent() {
     onCodeScanned: codes => {
       if (codes.length > 0 && !qrValue) {
         const value = codes[0].value;
-        console.log('Mã quét được:', value);
+        // console.log('Mã quét được:', value);
         setQrValue(value);
+        // console.log('value',value);
+        
       }
     },
   });
@@ -45,12 +49,61 @@ export function CameraComponent() {
   }, [hasPermission]);
 
   // ✅ Gửi QR về màn hình trước
-  useEffect(() => {
-    if (qrValue && route.params?.onGoBack) {
+useEffect(() => {
+  async function getHSHK(cc) {
+    const { data, error } = await supabase
+      .from('population')
+      .select('SOHOK')
+      .eq('CCCD', cc)
+      .single(); // chỉ lấy 1 dòng
+
+    if (error) {
+      console.log('Lỗi Supabase:', error.message);
+      return null;
+    }
+    return data?.SOHOK;
+  }
+
+  async function handleQR() {
+    if (!qrValue) return;
+
+    const parseCitizenData = (str) => {
+      const parts = str.split('|');
+      return {
+        CCCD: parts[0]?.toUpperCase() || '',
+      };
+    };
+
+    const citizen = parseCitizenData(qrValue);
+    // console.log('qrValue',qrValue);
+    // console.log('citizen',citizen);
+    
+    
+
+    if (route.params?.onGoBack) {
+      // ✅ Trả dữ liệu về màn trước (callback)
       route.params.onGoBack({ qrValue });
       navigation.goBack();
+    } else {
+      // ✅ Lấy số hộ khẩu rồi chuyển sang màn getOneFamily
+      const sohkNumber = await getHSHK(citizen.CCCD);
+      // console.log('SOHOK:', sohkNumber);
+
+      if(sohkNumber){
+      navigation.push('getOneFamily', {
+        screen: sohkNumber,
+        CCCD: citizen.CCCD,
+      });
+      
+      }else{
+      Alert.alert('Thông báo', `Không có thông tin công dân được tìm thấy`);
+      }
     }
-  }, [qrValue]);
+  }
+
+  handleQR();
+}, [qrValue]);
+
 
   // ✅ Chụp ảnh và giảm dung lượng
   const capturePhoto = async () => {
@@ -64,7 +117,7 @@ export function CameraComponent() {
       });
 
       const originalPath = 'file://' + photoData.path;
-      console.log('Ảnh gốc:', originalPath);
+      // console.log('Ảnh gốc:', originalPath);
 
       // ⚙️ Giảm kích thước ảnh
       const resized = await ImageResizer.createResizedImage(
@@ -81,7 +134,7 @@ export function CameraComponent() {
 
       // Kiểm tra dung lượng (tùy chọn)
       const stat = await RNFS.stat(resized.uri);
-      console.log('✅ Ảnh sau nén:', resized.uri, '≈', Math.round(stat.size / 1024), 'KB');
+      // console.log('✅ Ảnh sau nén:', resized.uri, '≈', Math.round(stat.size / 1024), 'KB');
 
       setPhoto(resized.uri);
     } catch (e) {
@@ -142,10 +195,12 @@ export function CameraComponent() {
             codeScanner={codeScanner}
             photo={true}
           />
-
-          <TouchableOpacity style={styles.captureButton} onPress={capturePhoto}>
+            {route.params && 
+                      <TouchableOpacity style={styles.captureButton} onPress={capturePhoto}>
             <Text style={{ color: '#fff', fontWeight: 'bold' }}>Chụp</Text>
           </TouchableOpacity>
+
+            }
         </>
       ) : (
         <View style={styles.preview}>
