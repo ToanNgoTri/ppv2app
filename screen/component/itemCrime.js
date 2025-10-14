@@ -81,16 +81,29 @@ export function Item({ item, index, location }) {
     console.log('finalUrl',finalUrl);
     
     const match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    console.log('match',match);
     
-    if (!match) return null;
-    return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
+    if (!match){
+      match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    }else{
+    return null;
+      } 
+    return {
+      location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
+      finalUrl,
+    };
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
-    const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        let result = await getCoordsFromShortLink(url);
+    console.log('result', result);
+
+    // console.log('result.finalUrl', result.finalUrl);
+
+    const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+
     if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
-    return await getCoordsFromShortLink(url);
+    return result.location;
   };
 
   const pushToSetLocation = async () => {

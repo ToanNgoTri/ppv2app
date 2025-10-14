@@ -216,11 +216,11 @@ export function AddCrime() {
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
-    console.log('extractLatLngFromGoogleMapsUrl');
+
     let result = await getCoordsFromShortLink(url);
     console.log('result', result);
 
-    console.log('result.finalUrl', result.finalUrl);
+    // console.log('result.finalUrl', result.finalUrl);
 
     const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     console.log('match2', match);
