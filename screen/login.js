@@ -116,6 +116,7 @@ export function Login() {
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+         placeholderTextColor="black"
       />
       <TextInput
         style={styles.input}
@@ -123,6 +124,7 @@ export function Login() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+         placeholderTextColor="black"
       />
       <TouchableOpacity
         style={styles.button}
