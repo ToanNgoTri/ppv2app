@@ -213,7 +213,7 @@ export function AddCrime() {
     // const match = finalUrl.match(/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
     let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
     if (!match) {
-      match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
     }
     // console.log('match1', match);
 
@@ -250,7 +250,7 @@ export function AddCrime() {
     const toado = await extractLatLngFromGoogleMapsUrl(text);
 
     if (!toado) {
-      Alert.alert('Lỗi', 'Không tìm thấy tọa độ trong liên kết Google Maps');
+      Alert.alert('Lỗi', 'Không tìm thấy tọa độ trong liên kết'+(Platform.OS === 'ios' ? 'Apple' : 'Google')+'Maps')
       setLocationGG('');
       return;
     }
