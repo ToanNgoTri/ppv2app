@@ -80,13 +80,14 @@ export function Item({ item, index, location }) {
     const finalUrl = response.url;
     console.log('finalUrl',finalUrl);
     
-    const match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    
-    if (!match){
-      match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
-    }else{
-    return null;
-      } 
+    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if(!match){
+       match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+    }
+    // console.log('match1', match);
+
+    if (!match) return { finalUrl };
     return {
       location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
       finalUrl,

@@ -204,15 +204,14 @@ export function AddCrime() {
     console.log('response', response);
 
     // const match = finalUrl.match(/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-    const match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if(!match){
+       match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
 
-    console.log('match1', match);
+    }
+    // console.log('match1', match);
 
-    if (!match){
-      match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
-    }else{
-    return null;
-      } 
+    if (!match) return { finalUrl };
     return {
       location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
       finalUrl,
