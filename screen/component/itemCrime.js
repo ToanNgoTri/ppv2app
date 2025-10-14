@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
 import React, { useState, useEffect } from 'react';
@@ -68,22 +69,21 @@ export function Item({ item, index, location }) {
 
   const convertCoordinates = coordString => {
     const [latStr, lonStr] = coordString.split(',').map(s => s.trim());
-    const lat =parseFloat(latStr)
-    const lon = parseFloat(lonStr)
+    const lat = parseFloat(latStr);
+    const lon = parseFloat(lonStr);
     return `${convertToDMS(lat, true)},${convertToDMS(lon, false)}`;
   };
 
   const getCoordsFromShortLink = async shortUrl => {
     console.log('getCoordsFromShortLink');
-    
+
     const response = await fetch(shortUrl, { redirect: 'follow' });
     const finalUrl = response.url;
-    console.log('finalUrl',finalUrl);
-    
-    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    if(!match){
-       match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
+    console.log('finalUrl', finalUrl);
 
+    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (!match) {
+      match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
     }
     console.log('match1', match);
 
@@ -95,31 +95,28 @@ export function Item({ item, index, location }) {
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
-        let result = await getCoordsFromShortLink(url);
+    let result = await getCoordsFromShortLink(url);
     console.log('result1', result);
 
     // console.log('result.finalUrl', result.finalUrl);
 
     const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
 
-
     if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
     return result.location;
   };
 
   const pushToSetLocation = async () => {
-    
     const result = await extractLatLngFromGoogleMapsUrl(LocationGG);
-    console.log('result',result);
+    console.log('result', result);
     location({ CCCD: item['CCCD'], location: result });
-    setLocationGG('')
-      Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+    setLocationGG('');
+    Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
   };
 
   const getCopiedText = async () => {
     const text = await Clipboard.getString();
     setLocationGG(text);
-    
   };
 
   return (
@@ -150,9 +147,7 @@ export function Item({ item, index, location }) {
         <Text style={{ fontWeight: 'bold', color: '#0D6EFD' }}>
           {index}. {item['HOTEN']}
         </Text>
-        <Text style={{ color: '#6C757D', fontSize: 12 }}>
-          {item['CCCD']}
-        </Text>
+        <Text style={{ color: '#6C757D', fontSize: 12 }}>{item['CCCD']}</Text>
       </View>
 
       {/* Thông tin + ảnh */}
@@ -197,7 +192,7 @@ export function Item({ item, index, location }) {
               onPress={getCopiedText}
             >
               <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Nhận địa chỉ từ Google
+                Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} map
               </Text>
             </TouchableOpacity>
           ) : (
