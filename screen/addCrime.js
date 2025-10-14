@@ -9,6 +9,7 @@ import {
   Image,
   Alert,
   Keyboard,
+  Platform,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -161,10 +162,16 @@ export function AddCrime() {
       let uploadIMG = await uploadImage();
 
       const { data, error } = await supabase.from('addCrime').insert([form]);
-      
+
       if (error) {
         console.log('Lỗi khi thêm:', error);
-        Alert.alert('Thất bại', error.message == 'duplicate key value violates unique constraint "addCrime_pkey"' ? 'Thông tin đã trùng với đối tượng khác' : error.message);
+        Alert.alert(
+          'Thất bại',
+          error.message ==
+            'duplicate key value violates unique constraint "addCrime_pkey"'
+            ? 'Thông tin đã trùng với đối tượng khác'
+            : error.message,
+        );
 
         return null;
       }
@@ -205,9 +212,8 @@ export function AddCrime() {
 
     // const match = finalUrl.match(/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
     let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    if(!match){
-       match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
-
+    if (!match) {
+      match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
     }
     // console.log('match1', match);
 
@@ -219,7 +225,6 @@ export function AddCrime() {
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
-
     let result = await getCoordsFromShortLink(url);
     console.log('result', result);
 
@@ -262,20 +267,23 @@ export function AddCrime() {
   // };
 
   function formatDateInput(value) {
-  // Xóa ký tự không phải số
-  const digits = value.replace(/\D/g, '');
-  let formatted = '';
+    // Xóa ký tự không phải số
+    const digits = value.replace(/\D/g, '');
+    let formatted = '';
 
-  if (digits.length <= 2) {
-    formatted = digits;
-  } else if (digits.length <= 4) {
-    formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  } else {
-    formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+    if (digits.length <= 2) {
+      formatted = digits;
+    } else if (digits.length <= 4) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    } else {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(
+        4,
+        8,
+      )}`;
+    }
+
+    return formatted;
   }
-
-  return formatted;
-}
 
   useEffect(() => {
     if (dataCCCD) {
@@ -333,12 +341,12 @@ export function AddCrime() {
           <View key={key} style={styles.inputGroup}>
             <Text style={styles.label}>{label}</Text>
             <TextInput
-            onFocus={() => {
-          scrollViewRef.current?.scrollTo({
-            y: index * 80, // ước lượng khoảng cách, hoặc có thể dùng measure()
-            animated: true,
-          });
-        }}
+              onFocus={() => {
+                scrollViewRef.current?.scrollTo({
+                  y: index * 80, // ước lượng khoảng cách, hoặc có thể dùng measure()
+                  animated: true,
+                });
+              }}
               keyboardType={
                 key == 'NAMSINH' || key == 'DAYARRES' || key == 'FREEDAY'
                   ? 'numeric'
@@ -385,7 +393,7 @@ export function AddCrime() {
             onPress={pushToSetLocation}
           >
             <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-              Nhận địa chỉ từ Google
+              Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} map
             </Text>
           </TouchableOpacity>
         ) : (
