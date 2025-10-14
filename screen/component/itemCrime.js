@@ -82,10 +82,10 @@ export function Item({ item, index, location }) {
     
     let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
     if(!match){
-       match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+       match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
 
     }
-    // console.log('match1', match);
+    console.log('match1', match);
 
     if (!match) return { finalUrl };
     return {
@@ -96,7 +96,7 @@ export function Item({ item, index, location }) {
 
   const extractLatLngFromGoogleMapsUrl = async url => {
         let result = await getCoordsFromShortLink(url);
-    console.log('result', result);
+    console.log('result1', result);
 
     // console.log('result.finalUrl', result.finalUrl);
 
