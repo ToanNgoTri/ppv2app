@@ -16,6 +16,7 @@ import { supabase } from './lib.js';
 import { decode } from 'base64-arraybuffer';
 import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 export function AddCrime() {
   const [form, setForm] = useState({
@@ -45,6 +46,10 @@ export function AddCrime() {
 
   const [imageURL, setImageURL] = useState(null);
 
+  const [LocationGG, setLocationGG] = useState('');
+
+  console.log('form', form);
+
   const inputRefs = useRef([]);
   console.log('imageURL', imageURL);
   const scrollViewRef = useRef(null);
@@ -63,22 +68,27 @@ export function AddCrime() {
   };
 
   function openCamera() {
-navigation.push('Camera', {
-    onGoBack: data => {
-      if ('qrValue' in data) {
-        setDataCCCD(data['qrValue']);
-         setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      }, 300);
-      } else {
-        setImageURL(data['photo']);
-      }
-    }})
+    navigation.push('Camera', {
+      onGoBack: data => {
+        if ('qrValue' in data) {
+          setDataCCCD(data['qrValue']);
+          setTimeout(() => {
+            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+          }, 300);
+        } else {
+          setImageURL(data['photo']);
+        }
+      },
+    });
   }
 
   function parseCitizenData(str) {
     const parts = str.split('|');
-    // console.log();
+    console.log('parts[4]', parts[4]);
+    console.log(
+      "parts[4]?.toLowerCase() === 'nam'",
+      parts[4]?.toLowerCase() === 'nam',
+    );
 
     return {
       CCCD: parts[0].toUpperCase() || '',
@@ -177,6 +187,7 @@ navigation.push('Camera', {
         SOHOK: '',
       });
       setImageURL(null);
+      setLocationGG('');
     } else {
       Alert.alert('Thông báo', `Thiếu số Định danh cá nhân`);
     }
@@ -184,24 +195,82 @@ navigation.push('Camera', {
   }
 
   const getCoordsFromShortLink = async shortUrl => {
-    console.log('getCoordsFromShortLink');
+    // console.log('getCoordsFromShortLink');
 
     const response = await fetch(shortUrl, { redirect: 'follow' });
     const finalUrl = response.url;
-    console.log('finalUrl', finalUrl);
+    console.log('response', response);
 
-    const match = finalUrl.match(/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-    console.log('match', match);
+    // const match = finalUrl.match(/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+    const match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
 
-    if (!match) return null;
-    return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
+    console.log('match1', match);
+
+    if (!match) return { finalUrl };
+    return {
+      location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
+      finalUrl,
+    };
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
-    const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    console.log('extractLatLngFromGoogleMapsUrl');
+    let result = await getCoordsFromShortLink(url);
+    console.log('result', result);
+
+    console.log('result.finalUrl', result.finalUrl);
+
+    const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    console.log('match2', match);
+
     if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
-    return await getCoordsFromShortLink(url);
+    return result.location;
   };
+
+  const pushToSetLocation = async () => {
+    console.log('pushToSetLocation');
+
+    const text = await Clipboard.getString();
+    setLocationGG(text);
+    if (!text || text.trim() === '') {
+      Alert.alert('Lỗi', 'Không có nội dung trong clipboard');
+      return;
+    }
+
+    const toado = await extractLatLngFromGoogleMapsUrl(text);
+
+    if (!toado) {
+      Alert.alert('Lỗi', 'Không tìm thấy tọa độ trong liên kết Google Maps');
+      setLocationGG('');
+      return;
+    }
+    console.log('toado', toado);
+    setForm(prev => ({
+      ...prev,
+      LOCATION: toado,
+    }));
+    Alert.alert('Thông báo', 'Thêm vị trí thành công');
+  };
+
+  // const getCopiedText = async () => {
+
+  // };
+
+  function formatDateInput(value) {
+  // Xóa ký tự không phải số
+  const digits = value.replace(/\D/g, '');
+  let formatted = '';
+
+  if (digits.length <= 2) {
+    formatted = digits;
+  } else if (digits.length <= 4) {
+    formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  } else {
+    formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+  }
+
+  return formatted;
+}
 
   useEffect(() => {
     if (dataCCCD) {
@@ -212,7 +281,7 @@ navigation.push('Camera', {
         CCCD: parsed.CCCD,
         HOTEN: parsed.HOTEN,
         NAMSINH: parsed.NAMSINH,
-        GIOITINH: parsed.GIOITINH ? 'Nam' : 'Nữ',
+        GIOITINH: parsed.GIOITINH,
         NOITHTRU: parsed.DIACHI,
       }));
     }
@@ -228,8 +297,6 @@ navigation.push('Camera', {
   //     }, 300);
   //   }
   // }, [dataCCCD]);
-
-
 
   return (
     <ScrollView
@@ -251,17 +318,32 @@ navigation.push('Camera', {
           DANTOC: 'Dân tộc',
           TONGIAO: 'Tôn giáo',
           NOITHTRU: 'Địa chỉ',
-          TOIDANH: 'Tội danh',
-          THOIHAN: 'Thời hạn',
-          NGAYBAT: 'Ngày bắt',
-          NGAYCHXONG: 'Ngày chấp hành xong',
-          NOICH: 'Nơi chấp hành',
-          LOCATION: 'Vị trí nơi ở',
+          CHARGE: 'Tội danh',
+          JUDGMENT: 'Thời hạn',
+          DAYARRES: 'Ngày bắt',
+          FREEDAY: 'Ngày chấp hành xong',
+          DETENTION: 'Nơi chấp hành',
+          // LOCATION: 'Vị trí nơi ở',
         }).map(([key, label], index, arr) => (
           <View key={key} style={styles.inputGroup}>
             <Text style={styles.label}>{label}</Text>
             <TextInput
-              autoCapitalize="characters"
+            onFocus={() => {
+          scrollViewRef.current?.scrollTo({
+            y: index * 80, // ước lượng khoảng cách, hoặc có thể dùng measure()
+            animated: true,
+          });
+        }}
+              keyboardType={
+                key == 'NAMSINH' || key == 'DAYARRES' || key == 'FREEDAY'
+                  ? 'numeric'
+                  : 'default'
+              }
+              autoCapitalize={
+                ['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(key)
+                  ? 'none'
+                  : 'characters'
+              }
               placeholder={`Nhập ${label.toLowerCase()}...`}
               ref={el => (inputRefs.current[index] = el)}
               returnKeyType={index === arr.length - 1 ? 'done' : 'next'}
@@ -274,13 +356,53 @@ navigation.push('Camera', {
               }}
               submitBehavior="submit" // giữ focus khi nhấn "Next"
               style={styles.input}
-              value={form[key]}
-              onChangeText={v => handleChange(key, v)}
+              value={key == 'GIOITINH' ? (form[key] ? 'Nam' : 'Nữ') : form[key]}
+              onChangeText={v => {
+                if (['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(key)) {
+                  handleChange(key, formatDateInput(v));
+                } else {
+                  handleChange(key, v);
+                }
+              }}
             />
           </View>
         ))}
-
-        <View style={[styles.inputGroup, { alignItems: 'center' }]}>
+        {!LocationGG ? (
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#0D6EFD',
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={pushToSetLocation}
+          >
+            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+              Nhận địa chỉ từ Google
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={{
+              backgroundColor: 'black',
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={pushToSetLocation}
+          >
+            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+              Thêm địa chỉ thành công!
+            </Text>
+          </View>
+        )}
+        <View
+          style={[styles.inputGroup, { alignItems: 'center', marginTop: 10 }]}
+        >
           <Image
             source={
               imageURL ? { uri: imageURL } : require('../asset/unknow.jpg')

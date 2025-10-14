@@ -78,7 +78,7 @@ function CustomTabBar({ navigation, state }) {
           elevation: 6,
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 26 }}>📷</Text>
+        <Text style={{ color: '#fff', fontSize: 26 ,top:-2}}>📷</Text>
       </TouchableOpacity>
 
       {/* Tab 3 */}
@@ -132,6 +132,8 @@ const TabItem = ({ tab, index, state, navigation, totalTabs }) => {
           fontSize: isActive ? 15 : 13,
           fontWeight: isActive ? 'bold' : '500',
           textAlign: 'center',
+          top:isActive?-5:0,
+          // backgroundColor:'red'
         }}
       >
         {tab.name}

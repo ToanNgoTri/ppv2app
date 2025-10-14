@@ -80,7 +80,7 @@ export function Item({ item, index, location }) {
     const finalUrl = response.url;
     console.log('finalUrl',finalUrl);
     
-    const match = finalUrl.match(/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+    const match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
     console.log('match',match);
     
     if (!match) return null;
