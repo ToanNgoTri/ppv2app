@@ -258,10 +258,10 @@ export function Crime() {
   };
 
   return (
-    <KeyboardAvoidingView
+    <View
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 5} // Điều chỉnh offset cho iOS
+      // behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 5} // Điều chỉnh offset cho iOS
     >
       <View
         style={{
@@ -519,7 +519,7 @@ export function Crime() {
           ></TouchableOpacity>
         )}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 const styles = StyleSheet.create({

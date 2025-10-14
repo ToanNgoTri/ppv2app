@@ -161,12 +161,14 @@ export function AddCrime() {
       let uploadIMG = await uploadImage();
 
       const { data, error } = await supabase.from('addCrime').insert([form]);
-      Alert.alert('Thành công', `Thông tin đã được thêm`);
-
+      
       if (error) {
         console.log('Lỗi khi thêm:', error);
+        Alert.alert('Thất bại', error.message == 'duplicate key value violates unique constraint "addCrime_pkey"' ? 'Thông tin đã trùng với đối tượng khác' : error.message);
+
         return null;
       }
+      Alert.alert('Thành công', `Thông tin đã được thêm`);
       setForm({
         HOTEN: '',
         TENKHAC: '',
