@@ -208,7 +208,11 @@ export function AddCrime() {
 
     console.log('match1', match);
 
-    if (!match) return { finalUrl };
+    if (!match){
+      match = finalUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    }else{
+    return null;
+      } 
     return {
       location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
       finalUrl,
