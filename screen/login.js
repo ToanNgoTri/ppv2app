@@ -111,20 +111,20 @@ export function Login() {
       <Text style={styles.title}>Đăng nhập</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Nhập Email"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-         placeholderTextColor="black"
+         placeholderTextColor="rgba(202, 202, 202, 1)"
       />
       <TextInput
         style={styles.input}
-        placeholder="Mật khẩu"
+        placeholder="Nhập Mật khẩu"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-         placeholderTextColor="black"
+         placeholderTextColor="rgba(202, 202, 202, 1)"
       />
       <TouchableOpacity
         style={styles.button}
