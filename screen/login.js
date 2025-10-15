@@ -116,7 +116,7 @@ export function Login() {
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-         placeholderTextColor="rgba(202, 202, 202, 1)"
+        placeholderTextColor={'gray'}
       />
       <TextInput
         style={styles.input}
@@ -124,7 +124,7 @@ export function Login() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-         placeholderTextColor="rgba(202, 202, 202, 1)"
+        placeholderTextColor={'gray'}
       />
       <TouchableOpacity
         style={styles.button}
