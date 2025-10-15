@@ -500,6 +500,7 @@ export function Crime() {
               global.SearchCrimeRef = ref;
             }}
             data={searchResutl}
+            keyExtractor={item =>item.CCCD}
             renderItem={(item, index) => (
               <Item
                 item={item.item}

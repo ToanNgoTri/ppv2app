@@ -107,9 +107,21 @@ export function Item({ item, index, location }) {
   };
 
   const pushToSetLocation = async () => {
-    const result = await extractLatLngFromGoogleMapsUrl(LocationGG);
-    console.log('result', result);
-    location({ CCCD: item['CCCD'], location: result });
+    const toado = await extractLatLngFromGoogleMapsUrl(LocationGG);
+    // console.log('toado', toado);
+
+    if (!toado) {
+      Alert.alert(
+        'Lỗi',
+        'Không tìm thấy tọa độ trong liên kết ' +
+          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
+          ' Map',
+      );
+      setLocationGG('');
+      return;
+    }
+
+    location({ CCCD: item['CCCD'], location: toado });
     setLocationGG('');
     Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
   };
@@ -118,6 +130,19 @@ export function Item({ item, index, location }) {
     const text = await Clipboard.getString();
     setLocationGG(text);
   };
+
+  async function deleteLocation() {
+    const { data, error } = await supabase
+      .from('crime')
+      .update({ LOCATION: null }) // giá trị mới
+      .eq('CCCD', item['CCCD']); // điều kiện cập nhật
+
+    if (error) {
+      Alert.alert('Cập nhật thất bại', 'Vui lòng thử lại');
+    } else {
+      Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+    }
+  }
 
   return (
     <View
@@ -174,6 +199,20 @@ export function Item({ item, index, location }) {
                   )}`,
                 )
               }
+              onLongPress={() => {
+                Alert.alert('Thông báo', 'Bạn có muốn xóa vị trí không?', [
+                  {
+                    text: 'Thoát',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Xoá',
+                    onPress: () => {
+                      deleteLocation();
+                    },
+                  },
+                ]);
+              }}
             >
               <Text style={{ color: '#0D6EFD', fontWeight: '600' }}>
                 📍 Xem vị trí trên bản đồ
@@ -192,7 +231,7 @@ export function Item({ item, index, location }) {
               onPress={getCopiedText}
             >
               <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} map
+                Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
               </Text>
             </TouchableOpacity>
           ) : (

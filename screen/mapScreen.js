@@ -6,11 +6,13 @@ import {
   View,
   TouchableOpacity,
   Text,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LeafletView, MapMarker } from 'react-native-leaflet-view';
 import { supabase } from './lib.js';
 import { Item } from './component/itemCrime.js';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function MapScreen() {
   const [mapMarkers, setMapMarkers] = useState([
@@ -28,6 +30,8 @@ export function MapScreen() {
   const [showModal, setShowModal] = useState(false);
 
   const [subjectSelect, setSubjectSelect] = useState({});
+
+  const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
   // Hàm xử lý sự kiện trả về từ LeafletView
   async function handleMapEvent(event) {
@@ -92,13 +96,17 @@ export function MapScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ ...styles.container, marginTop: insets.top }}>
+      <StatusBar
+        translucent // 🔹 cho phép nội dung nằm dưới status bar
+        // backgroundColor="#1E1E1E" // 🔹 trong suốt
+        barStyle='dark-content'
+      />
       <LeafletView
         mapMarkers={mapMarkers}
         mapCenterPosition={{ lat: 10.883, lng: 107.217 }}
         zoom={13}
         onMessageReceived={handleMapEvent}
-        on
       />
       <Modal
         presentationStyle="pageSheet"
@@ -106,44 +114,43 @@ export function MapScreen() {
         visible={showModal}
         onRequestClose={() => setShowModal(false)}
       >
-
-<View style={{ flex: 1, backgroundColor: '#f0f4f4' }}>
-    {/* Header */}
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: 60,
-        paddingHorizontal: 12,
-        backgroundColor: 'rgba(140, 184, 184, 1)',
-        // borderBottomWidth: 1,
-        // borderBottomColor: '#2F4F4F',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
-      }}
-    >
-      <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000' }}>
-        Thông tin công dân
-      </Text>
-      <TouchableOpacity
-        onPress={() => setShowModal(false)}
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: 'rgba(187, 203, 203, 1)',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>X</Text>
-      </TouchableOpacity>
-    </View>
-        <Item item={subjectSelect} index={1} />
+        <View style={{ flex: 1, backgroundColor: '#f0f4f4' }}>
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              height: 60,
+              paddingHorizontal: 12,
+              backgroundColor: 'rgba(140, 184, 184, 1)',
+              // borderBottomWidth: 1,
+              // borderBottomColor: '#2F4F4F',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              elevation: 2,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000' }}>
+              Thông tin công dân
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowModal(false)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: 'rgba(187, 203, 203, 1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>X</Text>
+            </TouchableOpacity>
+          </View>
+          <Item item={subjectSelect} index={1} />
         </View>
       </Modal>
     </SafeAreaView>

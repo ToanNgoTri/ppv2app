@@ -49,7 +49,7 @@ export function AddCrime() {
 
   const [LocationGG, setLocationGG] = useState('');
 
-  console.log('form', form);
+  // console.log('form', form);
 
   const inputRefs = useRef([]);
   console.log('imageURL', imageURL);
@@ -196,7 +196,8 @@ export function AddCrime() {
         SOHOK: '',
       });
       setImageURL(null);
-      setLocationGG('');
+      // setLocationGG('');
+      setForm({ ...form,  LOCATION:'' });
     } else {
       Alert.alert('Thông báo', `Thiếu số Định danh cá nhân`);
     }
@@ -238,10 +239,12 @@ export function AddCrime() {
   };
 
   const pushToSetLocation = async () => {
-    console.log('pushToSetLocation');
+    // console.log('pushToSetLocation');
 
     const text = await Clipboard.getString();
-    setLocationGG(text);
+    // setLocationGG(text);
+          // setForm({ ...form, LOCATION: text });
+
     if (!text || text.trim() === '') {
       Alert.alert('Lỗi', 'Không có nội dung trong clipboard');
       return;
@@ -250,8 +253,17 @@ export function AddCrime() {
     const toado = await extractLatLngFromGoogleMapsUrl(text);
 
     if (!toado) {
-      Alert.alert('Lỗi', 'Không tìm thấy tọa độ trong liên kết'+(Platform.OS === 'ios' ? 'Apple' : 'Google')+'Maps')
-      setLocationGG('');
+      Alert.alert(
+        'Lỗi',
+        'Không tìm thấy tọa độ trong liên kết ' +
+          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
+          ' Map',
+      );
+      // setLocationGG('');
+
+      setForm({ ...form,LOCATION: '' });
+
+      
       return;
     }
     console.log('toado', toado);
@@ -259,7 +271,7 @@ export function AddCrime() {
       ...prev,
       LOCATION: toado,
     }));
-    Alert.alert('Thông báo', 'Thêm vị trí thành công');
+    // Alert.alert('Thông báo', 'Thêm vị trí thành công');
   };
 
   // const getCopiedText = async () => {
@@ -283,6 +295,12 @@ export function AddCrime() {
     }
 
     return formatted;
+  }
+
+  function deleteLocation() {
+            setForm({ ...form,LOCATION:'' });
+
+      // Alert.alert('Thông báo', 'Xóa vị trí');
   }
 
   useEffect(() => {
@@ -380,12 +398,12 @@ export function AddCrime() {
             />
           </View>
         ))}
-        {!LocationGG ? (
+        {!form['LOCATION'] ? (
           <TouchableOpacity
             style={{
               backgroundColor: '#0D6EFD',
               paddingVertical: 8,
-              paddingHorizontal: 16,
+              // paddingHorizontal: 8,
               borderRadius: 8,
               alignItems: 'center',
               justifyContent: 'center',
@@ -393,25 +411,38 @@ export function AddCrime() {
             onPress={pushToSetLocation}
           >
             <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-              Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} map
+              Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
             </Text>
           </TouchableOpacity>
         ) : (
-          <View
+          <TouchableOpacity
             style={{
               backgroundColor: 'black',
               paddingVertical: 8,
-              paddingHorizontal: 16,
+              // paddingHorizontal: 8,
               borderRadius: 8,
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onPress={pushToSetLocation}
+            onLongPress={() => {
+              Alert.alert('Thông báo', 'Bạn có muốn xóa vị trí không?', [
+                {
+                  text: 'Thoát',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Xoá',
+                  onPress: () => {
+                    deleteLocation();
+                  },
+                },
+              ]);
+            }}
           >
             <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
               Thêm địa chỉ thành công!
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
         <View
           style={[styles.inputGroup, { alignItems: 'center', marginTop: 10 }]}
@@ -469,7 +500,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0EA5E9',
     paddingVertical: 14,
     borderRadius: 10,
-    marginTop: 10,
+    marginTop: 0,
     alignItems: 'center',
   },
   cameraText: { color: '#fff', fontSize: 17, fontWeight: '600' },
@@ -486,6 +517,6 @@ const styles = StyleSheet.create({
     height: 150,
     resizeMode: 'cover',
     borderRadius: 10,
-    marginBottom: 10,
+    // marginBottom: 10,
   },
 });
