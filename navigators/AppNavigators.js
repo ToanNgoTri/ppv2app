@@ -78,7 +78,7 @@ function CustomTabBar({ navigation, state }) {
           elevation: 6,
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 26 ,top:-2}}>📷</Text>
+        <Text style={{ color: '#fff', fontSize: 26 }}>📷</Text>
       </TouchableOpacity>
 
       {/* Tab 3 */}
