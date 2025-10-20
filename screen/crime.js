@@ -9,7 +9,6 @@ import {
   Keyboard,
   Image,
   StyleSheet,
-  KeyboardAvoidingView,
 } from 'react-native';
 // import crime from '../asset/crime.json';
 import { useNavigation } from '@react-navigation/native';
@@ -30,7 +29,7 @@ export function Crime() {
 
   const [loading, setLoading] = useState(false);
 
-  const [locationInput, setLocationInput] = useState('');
+  const [visibleFilters, setVisibleFilters] = useState(1);
 
   const [searchResutl, setSearchResult] = useState([]);
   const navigation = useNavigation();
@@ -286,150 +285,218 @@ export function Crime() {
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 3,
+            paddingTop:0
           }}
         >
-{[1, 2, 3].map(num => {
-  // Lấy giá trị title hiện tại của từng dòng
-  const currentTitle =
-    num === 1 ? titleFilter1 : num === 2 ? titleFilter2 : titleFilter3;
+          {[1, 2, 3].slice(0, visibleFilters).map(num => {
+            // Lấy giá trị title hiện tại của từng dòng
+            const currentTitle =
+              num === 1
+                ? titleFilter1
+                : num === 2
+                ? titleFilter2
+                : titleFilter3;
 
-  // Quy định keyboardType tùy theo tiêu chí
-  const keyboardType = ['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(currentTitle)
-    ? 'numeric'
-    : 'default';
+            // Quy định keyboardType tùy theo tiêu chí
+            const keyboardType = ['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(
+              currentTitle,
+            )
+              ? 'numeric'
+              : 'default';
 
+            const CapitalBool = ['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(
+              currentTitle,
+            )
+              ? 'none'
+              : 'characters';
 
-            const CapitalBool =
-    ['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(currentTitle)
-      ? 'none'
-      : 'characters';
+            // Lấy input và setter tương ứng
+            const currentInput =
+              num === 1 ? input1 : num === 2 ? input2 : input3;
+            const setCurrentInput =
+              num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
 
+            return (
+              <View
+                key={num}
+                style={{
+                  height: 40,
+                  flexDirection: 'row',
+                  marginBottom: 7,
+                  marginTop: num == 1 ? 7 : 0,
+                  // backgroundColor: 'red',
+                }}
+              >
+                <View
+                  style={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 5,
+                  }}
+                >
+                  <SelectDropdown
+                    data={title}
+                    onSelect={(selectedItem, index) => {
+                      if (num === 1) setTitleFilter1(selectedItem);
+                      else if (num === 2) setTitleFilter2(selectedItem);
+                      else setTitleFilter3(selectedItem);
+                    }}
+                    renderButton={(selectedItem, isOpened) => (
+                      <View
+                        style={{
+                          backgroundColor: '#fafafa',
+                          borderRadius: 8,
+                          paddingVertical: 6,
+                          paddingHorizontal: 8,
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontWeight: '600' }}>
+                          {({
+                            HOTEN: 'HỌ TÊN',
+                            TENKHAC: 'TÊN KHÁC',
+                            GIOITINH: 'GIỚI TÍNH',
+                            NAMSINH: 'NĂM SINH',
+                            TENCHA: 'TÊN CHA',
+                            TENME: 'TÊN MẸ',
+                            SOHOK: 'SỐ HSHK',
+                            DANTOC: 'DÂN TỘC',
+                            TONGIAO: 'TÔN GIÁO',
+                            CCCD: 'CCCD',
+                            NOITHTRU: 'ĐỊA CHỈ',
+                            CHARGE: 'TỘI DANH',
+                            JUDGMENT: 'HÌNH PHẠT',
+                            DAYARRES: 'NGÀY BẮT',
+                            FREEDAY: 'NGÀY TỰ DO',
+                            DETENTION: 'TRẠI GIAM',
+                          }[currentTitle] || 'CHỌN MỤC') + ' ▼'}
+                        </Text>
+                      </View>
+                    )}
+                    renderItem={(item, index, isSelected) => (
+                      <View
+                        style={{
+                          padding: 8,
+                          backgroundColor: isSelected ? '#D2D9DF' : 'white',
+                        }}
+                      >
+                        <Text style={{ fontSize: 13 }}>
+                          {item == 'CHARGE'
+                            ? 'TỘI DANH'
+                            : item == 'JUDGMENT'
+                            ? 'HÌNH PHẠT'
+                            : item == 'DAYARRES'
+                            ? 'NGÀY BẮT'
+                            : item == 'FREEDAY'
+                            ? 'NGÀY TỰ DO'
+                            : item == 'DETENTION'
+                            ? 'TRẠI GIAM'
+                            : item}
+                        </Text>
+                      </View>
+                    )}
+                    dropdownStyle={{ borderRadius: 10 }}
+                  />
+                </View>
 
-  // Lấy input và setter tương ứng
-  const currentInput =
-    num === 1 ? input1 : num === 2 ? input2 : input3;
-  const setCurrentInput =
-    num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
-
-  return (
-    <View
-      key={num}
-      style={{
-        flexDirection: 'row',
-        marginBottom: num === 3 ? 0 : 6,
-      }}
-    >
-      <View
-        style={{
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: 5,
-        }}
-      >
-        <SelectDropdown
-          data={title}
-          onSelect={(selectedItem, index) => {
-            if (num === 1) setTitleFilter1(selectedItem);
-            else if (num === 2) setTitleFilter2(selectedItem);
-            else setTitleFilter3(selectedItem);
-          }}
-          renderButton={(selectedItem, isOpened) => (
-            <View
-              style={{
-                backgroundColor: '#fafafa',
-                borderRadius: 8,
-                paddingVertical: 6,
-                paddingHorizontal: 8,
-                borderWidth: 1,
-                borderColor: '#ccc',
-              }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: '600' }}>
-                {({
-                  HOTEN: 'HỌ TÊN',
-                  TENKHAC: 'TÊN KHÁC',
-                  GIOITINH: 'GIỚI TÍNH',
-                  NAMSINH: 'NĂM SINH',
-                  TENCHA: 'TÊN CHA',
-                  TENME: 'TÊN MẸ',
-                  SOHOK: 'SỐ HSHK',
-                  DANTOC: 'DÂN TỘC',
-                  TONGIAO: 'TÔN GIÁO',
-                  CCCD: 'CCCD',
-                  NOITHTRU: 'ĐỊA CHỈ',
-                  CHARGE: 'TỘI DANH',
-                  JUDGMENT: 'HÌNH PHẠT',
-                  DAYARRES: 'NGÀY BẮT',
-                  FREEDAY: 'NGÀY TỰ DO',
-                  DETENTION: 'TRẠI GIAM',
-                }[currentTitle] || 'CHỌN MỤC') + ' ▼'}
-              </Text>
-            </View>
-          )}
-          renderItem={(item, index, isSelected) => (
-            <View
-              style={{
-                padding: 8,
-                backgroundColor: isSelected ? '#D2D9DF' : 'white',
-              }}
-            >
-              <Text style={{ fontSize: 13 }}>
-                {item == 'CHARGE'
-                  ? 'TỘI DANH'
-                  : item == 'JUDGMENT'
-                  ? 'HÌNH PHẠT'
-                  : item == 'DAYARRES'
-                  ? 'NGÀY BẮT'
-                  : item == 'FREEDAY'
-                  ? 'NGÀY TỰ DO'
-                  : item == 'DETENTION'
-                  ? 'TRẠI GIAM'
-                  : item}
-              </Text>
-            </View>
-          )}
-          dropdownStyle={{ borderRadius: 10 }}
-        />
-      </View>
-
-      <TextInput
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: 8,
-          borderColor: '#ccc',
-          borderWidth: 1,
-          paddingLeft: 10,
-          flex: 1,
-          height: 40,
-          fontSize: 13,
-        }}
-        value={currentInput}
-        onChangeText={setCurrentInput}
-        placeholder="Nhập từ khóa..."
-        placeholderTextColor={'gray'}
-        selectTextOnFocus={true}
-        autoCapitalize={CapitalBool}
-        keyboardType={keyboardType} // ✅ auto đổi
-        onSubmitEditing={() => pushToSearch()}
-      />
-    </View>
-  );
-})}
+                <TextInput
+                  style={{
+                    backgroundColor: '#fff',
+                    borderRadius: 8,
+                    borderColor: '#ccc',
+                    borderWidth: 1,
+                    paddingLeft: 10,
+                    flex: 1,
+                    height: 40,
+                    fontSize: 13,
+                  }}
+                  value={currentInput}
+                  onChangeText={setCurrentInput}
+                  placeholder="Nhập từ khóa..."
+                  placeholderTextColor={'gray'}
+                  selectTextOnFocus={true}
+                  autoCapitalize={CapitalBool}
+                  keyboardType={keyboardType} // ✅ auto đổi
+                  onSubmitEditing={() => pushToSearch()}
+                />
+              </View>
+            );
+          })}
 
           {/* Hàng dưới cùng */}
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
-              marginTop: 8,
+              marginTop: 0,
               alignItems: 'center',
             }}
           >
-            <Text style={{ fontSize: 13 }}>
-              Kết quả:{' '}
-              <Text style={{ fontWeight: 'bold' }}>{searchResutl.length}</Text>
-            </Text>
-
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                // marginRight: 10,
+                alignItems: 'center',
+              }}
+            >
+              <View>
+                <Text
+                  style={{
+                    marginRight: 10,
+                    fontSize: 13,
+                    textAlign: 'center',
+                    textAlignVertical: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  Kết quả:{' '}
+                  <Text style={{ fontWeight: 'bold' }}>
+                    {searchResutl.length}
+                  </Text>
+                </Text>
+              </View>
+              {visibleFilters < 3 ? (
+                <TouchableOpacity
+                  onPress={() =>
+                    setVisibleFilters(prev => Math.min(prev + 1, 3))
+                  }
+                  style={{
+                    paddingHorizontal: 15,
+                    height: 35,
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: '#198754',
+                  }}
+                >
+                  <Text
+                    style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}
+                  >
+                    + Thêm
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setVisibleFilters(prev => Math.min(prev - 2))}
+                  style={{
+                    paddingHorizontal: 15,
+                    height: 35,
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: '#b79902ff',
+                  }}
+                >
+                  <Text
+                    style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}
+                  >
+                    Đóng
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TouchableOpacity
                 onPress={() => pushToSearch()}
@@ -489,8 +556,7 @@ export function Crime() {
         style={{
           paddingLeft: 20,
           paddingRight: 20,
-          marginBottom: 210 + insets.top,
-          // backgroundColor:'black'
+          marginBottom: 110 + (visibleFilters - 1) * 47 + insets.top,
         }}
       >
         {searchResutl.length ? (
@@ -500,7 +566,7 @@ export function Crime() {
               global.SearchCrimeRef = ref;
             }}
             data={searchResutl}
-            keyExtractor={item =>item.CCCD}
+            keyExtractor={item => item.CCCD}
             renderItem={(item, index) => (
               <Item
                 item={item.item}

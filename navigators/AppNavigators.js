@@ -64,8 +64,8 @@ function CustomTabBar({ navigation, state }) {
         activeOpacity={0.85}
         onPress={() => navigation.navigate('Camera')}
         style={{
-          width: 55,
-          height: 55,
+          width: 50,
+          height: 50,
           borderRadius: 40,
           backgroundColor: '#00c853',
           alignItems: 'center',
@@ -78,7 +78,7 @@ function CustomTabBar({ navigation, state }) {
           elevation: 6,
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 26 }}>📷</Text>
+        <Text style={{ color: '#fff', fontSize: 26 ,top:-4+insets.bottom/9}}>📷</Text>
       </TouchableOpacity>
 
       {/* Tab 3 */}

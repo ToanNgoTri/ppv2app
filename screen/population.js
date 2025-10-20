@@ -43,7 +43,7 @@ export function Population() {
   const [searchResult, setSearchResult] = useState([]);
   const navigation = useNavigation();
 
-  // const FlatListToScroll = useRef(null);
+  const [visibleFilters, setVisibleFilters] = useState(1);
 
   // const externalDirectoryPath = `${RNFS.ExternalDirectoryPath}`;
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
@@ -207,7 +207,7 @@ export function Population() {
             width: '95%',
             backgroundColor: '#fff',
             borderRadius: 12,
-            paddingVertical: 10,
+            // paddingVertical: 10,
             paddingHorizontal: 10,
             shadowColor: '#000',
             shadowOpacity: 0.1,
@@ -215,107 +215,112 @@ export function Population() {
             elevation: 3,
           }}
         >
-{[1, 2, 3].map(num => {
-  const currentTitle =
-    num === 1 ? titleFilter1 : num === 2 ? titleFilter2 : titleFilter3;
-  const currentInput =
-    num === 1 ? input1 : num === 2 ? input2 : input3;
-  const setCurrentInput =
-    num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
+          {[1, 2, 3].slice(0, visibleFilters).map(num => {
+            const currentTitle =
+              num === 1
+                ? titleFilter1
+                : num === 2
+                ? titleFilter2
+                : titleFilter3;
+            const currentInput =
+              num === 1 ? input1 : num === 2 ? input2 : input3;
+            const setCurrentInput =
+              num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
 
-  const keyboardType =
-    ['NAMSINH'].includes(currentTitle)
-      ? 'numeric'
-      : 'default';
+            const keyboardType = ['NAMSINH'].includes(currentTitle)
+              ? 'numeric'
+              : 'default';
 
-        const CapitalBool =
-    ['NAMSINH'].includes(currentTitle)
-      ? 'none'
-      : 'characters';
+            const CapitalBool = ['NAMSINH'].includes(currentTitle)
+              ? 'none'
+              : 'characters';
 
+            return (
+              <View
+                key={num}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 8,
+                  height: 40,
+                  marginTop: num == 1 ? 8 :0
+                }}
+              >
+                <SelectDropdown
+                  data={title}
+                  onSelect={selectedItem => {
+                    if (num === 1) setTitleFilter1(selectedItem);
+                    if (num === 2) setTitleFilter2(selectedItem);
+                    if (num === 3) setTitleFilter3(selectedItem);
+                  }}
+                  renderButton={selectedItem => (
+                    <View
+                      style={{
+                        backgroundColor: '#e0f2f1',
+                        borderRadius: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 8,
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: '#006666',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {currentTitle} ▼
+                      </Text>
+                    </View>
+                  )}
+                  renderItem={(item, index, isSelected) => (
+                    <View
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        backgroundColor: isSelected ? '#d0f0ef' : '#fff',
+                      }}
+                    >
+                      <Text style={{ fontSize: 13, color: '#004d4d' }}>
+                        {item}
+                      </Text>
+                    </View>
+                  )}
+                  dropdownStyle={{
+                    borderRadius: 8,
+                    backgroundColor: '#fff',
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                  }}
+                />
 
-  return (
-    <View
-      key={num}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: num < 3 ? 8 : 0,
-      }}
-    >
-      <SelectDropdown
-        data={title}
-        onSelect={selectedItem => {
-          if (num === 1) setTitleFilter1(selectedItem);
-          if (num === 2) setTitleFilter2(selectedItem);
-          if (num === 3) setTitleFilter3(selectedItem);
-        }}
-        renderButton={selectedItem => (
-          <View
-            style={{
-              backgroundColor: '#e0f2f1',
-              borderRadius: 8,
-              paddingVertical: 6,
-              paddingHorizontal: 8,
-              borderWidth: 1,
-              borderColor: '#ccc',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 13,
-                color: '#006666',
-                fontWeight: '600',
-              }}
-            >
-              {currentTitle} ▼
-            </Text>
-          </View>
-        )}
-        renderItem={(item, index, isSelected) => (
-          <View
-            style={{
-              paddingVertical: 6,
-              paddingHorizontal: 10,
-              backgroundColor: isSelected ? '#d0f0ef' : '#fff',
-            }}
-          >
-            <Text style={{ fontSize: 13, color: '#004d4d' }}>{item}</Text>
-          </View>
-        )}
-        dropdownStyle={{
-          borderRadius: 8,
-          backgroundColor: '#fff',
-          borderWidth: 1,
-          borderColor: '#ccc',
-        }}
-      />
-
-      <TextInput
-        style={{
-          flex: 1,
-          backgroundColor: '#f9f9f9',
-          borderRadius: 8,
-          borderWidth: 1,
-          borderColor: '#ccc',
-          marginLeft: 8,
-          paddingHorizontal: 10,
-          fontSize: 13,
-          color: '#333',
-          height: 38,
-        }}
-        value={currentInput}
-        onChangeText={setCurrentInput}
-        autoCapitalize={CapitalBool}
-        keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
-        placeholder="Nhập từ khóa..."
-        placeholderTextColor="#999"
-        selectTextOnFocus={true}
-        onSubmitEditing={() => pushToSearch()}
-      />
-    </View>
-  );
-})}
+                <TextInput
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#f9f9f9',
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    marginLeft: 8,
+                    paddingHorizontal: 10,
+                    fontSize: 13,
+                    color: '#333',
+                    height: 38,
+                  }}
+                  value={currentInput}
+                  onChangeText={setCurrentInput}
+                  autoCapitalize={CapitalBool}
+                  keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
+                  placeholder="Nhập từ khóa..."
+                  placeholderTextColor="#999"
+                  selectTextOnFocus={true}
+                  onSubmitEditing={() => pushToSearch()}
+                />
+              </View>
+            );
+          })}
         </View>
 
         {/* 🔘 Nút X và Search */}
@@ -331,12 +336,13 @@ export function Population() {
           <TouchableOpacity
             style={{
               backgroundColor: '#e74c3c',
-              width: 45,
-              height: 45,
+              width: 35,
+              height: 35,
               borderRadius: 22.5,
               alignItems: 'center',
               justifyContent: 'center',
               elevation: 3,
+              marginRight:10
             }}
             onPress={() => {
               setInput1('');
@@ -351,6 +357,43 @@ export function Population() {
               X
             </Text>
           </TouchableOpacity>
+          {visibleFilters < 3 ? (
+            <TouchableOpacity
+              onPress={() => setVisibleFilters(prev => Math.min(prev + 1, 3))}
+              style={{
+                paddingHorizontal: 10,
+                height: 35,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#04c9dfff',
+              }}
+            >
+              <Text
+                style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}
+              >
+                + Thêm
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => setVisibleFilters(prev => Math.min(prev - 2))}
+              style={{
+                paddingHorizontal: 10,
+                height: 35,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#b79902ff',
+              }}
+            >
+              <Text
+                style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}
+              >
+                Đóng
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={{ color: '#fff', fontSize: 14 }}>
@@ -363,7 +406,7 @@ export function Population() {
             style={{
               backgroundColor: '#00b894',
               borderRadius: 22.5,
-              paddingHorizontal: 20,
+              paddingHorizontal: 10,
               height: 45,
               justifyContent: 'center',
               alignItems: 'center',
@@ -398,7 +441,7 @@ export function Population() {
         style={{
           paddingLeft: 20,
           paddingRight: 20,
-          marginBottom: 230 + insets.top,
+          marginBottom: 128 + (visibleFilters - 1) * 48    + insets.top,
         }}
       >
         {searchResult.length ? (

@@ -25,7 +25,11 @@ export function MapScreen() {
     },
   ]);
 
-  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [mapCenterPosition, setMapCenterPosition] = useState({
+  lat: 10.883,
+  lng: 107.217,
+});
+  // const [selectedMarker, setSelectedMarker] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
 
@@ -47,7 +51,7 @@ export function MapScreen() {
       console.log('data', data);
 
       setSubjectSelect(data[0] || {});
-      setSelectedMarker(markerId);
+      // setSelectedMarker(markerId);
       setShowModal(true);
       // Alert.alert('Marker được bấm!', `ID: ${markerId}`);
     }
@@ -104,8 +108,9 @@ export function MapScreen() {
       />
       <LeafletView
         mapMarkers={mapMarkers}
-        mapCenterPosition={{ lat: 10.883, lng: 107.217 }}
+        mapCenterPosition={mapCenterPosition}
         zoom={13}
+        zoo
         onMessageReceived={handleMapEvent}
       />
       <Modal
