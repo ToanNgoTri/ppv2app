@@ -47,7 +47,7 @@ export function AddCrime() {
 
   const [imageURL, setImageURL] = useState(null);
 
-  const [LocationGG, setLocationGG] = useState('');
+  // const [LocationGG, setLocationGG] = useState('');
 
   // console.log('form', form);
 
@@ -61,7 +61,7 @@ export function AddCrime() {
     if (key == 'GIOITINH') {
       setForm({
         ...form,
-        ['GIOITINH']: value.toLowerCase() == 'nam' ? true : false,
+        ['GIOITINH']: value,
       });
     } else {
       setForm({ ...form, [key]: value });
@@ -96,7 +96,7 @@ export function AddCrime() {
       MAHS: parts[1].toUpperCase() || '',
       HOTEN: (parts[2] || '').trim().toUpperCase(),
       NAMSINH: formatDate(parts[3]),
-      GIOITINH: parts[4]?.toLowerCase() === 'nam',
+      GIOITINH: parts[4]?.toLowerCase() ,
       DIACHI: (parts[5] || '').trim().toUpperCase(),
       NGAYCAP: formatDate(parts[6]),
       // các phần sau nếu cần có thể thêm
@@ -158,10 +158,12 @@ export function AddCrime() {
   async function saveData(params) {
     console.log('form.CCCD', form.CCCD.length);
 
-    if (!form.CCCD == '') {
+    if (form.CCCD && form.CCCD.trim() !== '') {
+      let dataPush = form
+       dataPush = { ...dataPush, GIOITINH: dataPush.GIOITINH === 'Nam' ? true : false }
       let uploadIMG = await uploadImage();
 
-      const { data, error } = await supabase.from('addCrime').insert([form]);
+      const { data, error } = await supabase.from('addCrime').insert([dataPush]);
 
       if (error) {
         console.log('Lỗi khi thêm:', error);
@@ -175,12 +177,11 @@ export function AddCrime() {
 
         return null;
       }
-      Alert.alert('Thành công', `Thông tin đã được thêm`);
       setForm({
         HOTEN: '',
         TENKHAC: '',
         NAMSINH: '',
-        GIOITINH: true,
+        GIOITINH: "",
         CCCD: '',
         TENCHA: '',
         TENME: '',
@@ -195,14 +196,19 @@ export function AddCrime() {
         LOCATION: '',
         SOHOK: '',
       });
+            Alert.alert('Thành công', `Thông tin đã được thêm`);
+
       setImageURL(null);
       // setLocationGG('');
-      setForm({ ...form,  LOCATION:'' });
+      // setForm({ ...form, LOCATION: '' });
     } else {
       Alert.alert('Thông báo', `Thiếu số Định danh cá nhân`);
     }
     // return data;
   }
+
+  console.log(form);
+  
 
   const getCoordsFromShortLink = async shortUrl => {
     // console.log('getCoordsFromShortLink');
@@ -243,7 +249,7 @@ export function AddCrime() {
 
     const text = await Clipboard.getString();
     // setLocationGG(text);
-          // setForm({ ...form, LOCATION: text });
+    // setForm({ ...form, LOCATION: text });
 
     if (!text || text.trim() === '') {
       Alert.alert('Lỗi', 'Không có nội dung trong clipboard');
@@ -261,9 +267,8 @@ export function AddCrime() {
       );
       // setLocationGG('');
 
-      setForm({ ...form,LOCATION: '' });
+      setForm({ ...form, LOCATION: '' });
 
-      
       return;
     }
     console.log('toado', toado);
@@ -298,9 +303,9 @@ export function AddCrime() {
   }
 
   function deleteLocation() {
-            setForm({ ...form,LOCATION:'' });
+    setForm({ ...form, LOCATION: '' });
 
-      // Alert.alert('Thông báo', 'Xóa vị trí');
+    // Alert.alert('Thông báo', 'Xóa vị trí');
   }
 
   useEffect(() => {
@@ -318,17 +323,28 @@ export function AddCrime() {
     }
   }, [dataCCCD]);
 
-  // useEffect(() => {
-  //   console.log('dataCCCD', dataCCCD);
-  //   console.log('scrollViewRef.current', scrollViewRef.current);
+  useEffect(() => {
+    if( route.params?.data){
+    navigation.setOptions({ title: `HSHK: ${route.params.data}` }); //đổi title
 
-  //   if (dataCCCD) {
-  //     setTimeout(() => {
-  //       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  //     }, 300);
-  //   }
-  // }, [dataCCCD]);
+    setForm({
+      ...form,
+      CCCD: route.params.data['CCCD'],
+      DANTOC: route.params.data['DANTOC'],
+      HOTEN: route.params.data['HOTEN'],
+      NAMSINH: route.params.data['NAMSINH'],
+      GIOITINH: route.params.data['GIOITINH'] ? 'Nam' : 'Nữ',
+      NOITHTRU: route.params.data['NOITHTRU'],
+      TENCHA: route.params.data['TENCHA'],
+      TENME: route.params.data['TENME'],
+      TONGIAO: route.params.data['TONGIAO'],
+      SOHOK: route.params.data['SOHOK'],
+    });
 
+    // console.log('route.params.data', route.params.data);
+    }
+
+  }, [route.params, navigation]);
   return (
     <ScrollView
       contentContainerStyle={{ ...styles.container, padding: 10 + insets.top }}
@@ -387,7 +403,7 @@ export function AddCrime() {
               }}
               submitBehavior="submit" // giữ focus khi nhấn "Next"
               style={styles.input}
-              value={key == 'GIOITINH' ? (form[key] ? 'Nam' : 'Nữ') : form[key]}
+              value={form[key]}
               onChangeText={v => {
                 if (['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(key)) {
                   handleChange(key, formatDateInput(v));
@@ -461,6 +477,12 @@ export function AddCrime() {
         <TouchableOpacity style={styles.saveButton} onPress={() => saveData()}>
           <Text style={styles.saveText}>💾 Lưu thông tin</Text>
         </TouchableOpacity>
+        {
+          route.params &&
+        <TouchableOpacity style={styles.exitButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.saveText}>🚪 Thoát</Text>
+        </TouchableOpacity>
+        }
       </View>
     </ScrollView>
   );
@@ -511,6 +533,14 @@ const styles = StyleSheet.create({
     marginTop: 15,
     alignItems: 'center',
   },
+    exitButton: {
+    backgroundColor: '#da0606ff',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 15,
+    alignItems: 'center',
+  },
+
   saveText: { color: '#fff', fontSize: 17, fontWeight: '600' },
   imagePreview: {
     width: 150,

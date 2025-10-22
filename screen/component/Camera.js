@@ -1,5 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Image, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Image,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Camera,
   useCameraDevice,
@@ -11,11 +20,12 @@ import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
 import { supabase } from '../lib.js';
 
-
 export function CameraComponent() {
   const [qrValue, setQrValue] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [isCameraActive, setIsCameraActive] = useState(true);
 
   const { hasPermission, requestPermission } = useCameraPermission();
   const camera = useRef(null);
@@ -33,77 +43,84 @@ export function CameraComponent() {
         // console.log('Mã quét được:', value);
         setQrValue(value);
         // console.log('value',value);
-        
       }
     },
   });
 
   // ✅ Xin quyền camera
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsCameraActive(true); // Activate camera on focus
+      return () => setIsCameraActive(false); // Deactivate camera on blur
+    }, []),
+  );
+
   useEffect(() => {
+    // setIsCameraActive(true);
     (async () => {
       if (!hasPermission) {
         await requestPermission();
       }
       setLoading(false);
     })();
+    // return () => {
+    //   setIsCameraActive(false);
+    // };
   }, [hasPermission]);
 
   // ✅ Gửi QR về màn hình trước
-useEffect(() => {
-  async function getHSHK(cc) {
-    const { data, error } = await supabase
-      .from('population')
-      .select('SOHOK')
-      .eq('CCCD', cc)
-      .single(); // chỉ lấy 1 dòng
+  useEffect(() => {
+    async function getHSHK(cc) {
+      const { data, error } = await supabase
+        .from('population')
+        .select('SOHOK')
+        .eq('CCCD', cc)
+        .single(); // chỉ lấy 1 dòng
 
-    if (error) {
-      console.log('Lỗi Supabase:', error.message);
-      return null;
+      if (error) {
+        console.log('Lỗi Supabase:', error.message);
+        return null;
+      }
+      return data?.SOHOK;
     }
-    return data?.SOHOK;
-  }
 
-  async function handleQR() {
-    if (!qrValue) return;
+    async function handleQR() {
+      if (!qrValue) return;
 
-    const parseCitizenData = (str) => {
-      const parts = str.split('|');
-      return {
-        CCCD: parts[0]?.toUpperCase() || '',
+      const parseCitizenData = str => {
+        const parts = str.split('|');
+        return {
+          CCCD: parts[0]?.toUpperCase() || '',
+        };
       };
-    };
 
-    const citizen = parseCitizenData(qrValue);
-    // console.log('qrValue',qrValue);
-    // console.log('citizen',citizen);
-    
-    
+      const citizen = parseCitizenData(qrValue);
+      // console.log('qrValue',qrValue);
+      // console.log('citizen',citizen);
 
-    if (route.params?.onGoBack) {
-      // ✅ Trả dữ liệu về màn trước (callback)
-      route.params.onGoBack({ qrValue });
-      navigation.goBack();
-    } else {
-      // ✅ Lấy số hộ khẩu rồi chuyển sang màn getOneFamily
-      const sohkNumber = await getHSHK(citizen.CCCD);
-      // console.log('SOHOK:', sohkNumber);
+      if (route.params?.onGoBack) {
+        // ✅ Trả dữ liệu về màn trước (callback)
+        route.params.onGoBack({ qrValue });
+        navigation.goBack();
+      } else {
+        // ✅ Lấy số hộ khẩu rồi chuyển sang màn getOneFamily
+        const sohkNumber = await getHSHK(citizen.CCCD);
+        // console.log('SOHOK:', sohkNumber);
 
-      if(sohkNumber){
-      navigation.push('getOneFamily', {
-        screen: sohkNumber,
-        CCCD: citizen.CCCD,
-      });
-      
-      }else{
-      Alert.alert('Thông báo', `Không có thông tin công dân được tìm thấy`);
+        if (sohkNumber) {
+          navigation.push('getOneFamily', {
+            screen: sohkNumber,
+            CCCD: citizen.CCCD,
+          });
+        } else {
+          Alert.alert('Thông báo', `Không có thông tin công dân được tìm thấy`);
+        }
       }
     }
-  }
 
-  handleQR();
-}, [qrValue]);
-
+    handleQR();
+  }, [qrValue]);
 
   // ✅ Chụp ảnh và giảm dung lượng
   const capturePhoto = async () => {
@@ -129,7 +146,7 @@ useEffect(() => {
         0, // Xoay ảnh
         undefined,
         false,
-        { mode: 'cover', onlyScaleDown: true }
+        { mode: 'cover', onlyScaleDown: true },
       );
 
       // Kiểm tra dung lượng (tùy chọn)
@@ -191,16 +208,21 @@ useEffect(() => {
             ref={camera}
             style={StyleSheet.absoluteFill}
             device={device}
-            isActive={true}
+            isActive={isCameraActive}
             codeScanner={codeScanner}
             photo={true}
+            video={false}
+            frameProcessorFps={5}
+            photoQualityBalance={'speed'}
           />
-            {route.params && 
-                      <TouchableOpacity style={styles.captureButton} onPress={capturePhoto}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Chụp</Text>
-          </TouchableOpacity>
-
-            }
+          {route.params && (
+            <TouchableOpacity
+              style={styles.captureButton}
+              onPress={capturePhoto}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Chụp</Text>
+            </TouchableOpacity>
+          )}
         </>
       ) : (
         <View style={styles.preview}>
@@ -208,7 +230,10 @@ useEffect(() => {
           <TouchableOpacity onPress={choseImage} style={styles.agreeButton}>
             <Text style={{ color: '#fff' }}>Đồng ý</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setPhoto(null)} style={styles.retryButton}>
+          <TouchableOpacity
+            onPress={() => setPhoto(null)}
+            style={styles.retryButton}
+          >
             <Text style={{ color: '#fff' }}>Chụp lại</Text>
           </TouchableOpacity>
         </View>
@@ -218,13 +243,12 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000'},
+  container: { flex: 1, backgroundColor: '#000' },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#000',
-    
   },
   text: { color: '#fff', marginTop: 10 },
   captureButton: {

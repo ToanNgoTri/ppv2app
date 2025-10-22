@@ -5,13 +5,12 @@ import {
   Image,
   TouchableOpacity,
   Linking,
-  TextInput,
   ScrollView,
   Alert,
   Platform,
 } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 export function Item({ item, index, location }) {

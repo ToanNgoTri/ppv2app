@@ -16,6 +16,7 @@ import {
   FlatList,
   Keyboard,
   StyleSheet,
+  Alert
 } from 'react-native';
 import population from '../asset/population.json';
 import { useNavigation } from '@react-navigation/native';
@@ -70,6 +71,23 @@ export function Population() {
             CCCD: item['CCCD'],
           })
         }
+        onLongPress={() => {
+          Alert.alert('Thông báo', 'Bạn có muốn thêm thông tin công dân vào danh sách đối tượng?', [
+            {
+              text: 'Thoát',
+              style: 'cancel',
+            },
+            {
+              text: 'Thêm',
+              onPress: () => {
+                navigation.push('addCrime', {
+                  data: item,
+
+                });
+              },
+            },
+          ]);
+        }}
         style={{
           backgroundColor: isEven ? '#F8F9FA' : '#E9ECEF',
           marginVertical: 6,
@@ -243,7 +261,7 @@ export function Population() {
                   alignItems: 'center',
                   marginBottom: 8,
                   height: 40,
-                  marginTop: num == 1 ? 8 :0
+                  marginTop: num == 1 ? 8 : 0,
                 }}
               >
                 <SelectDropdown
@@ -342,7 +360,7 @@ export function Population() {
               alignItems: 'center',
               justifyContent: 'center',
               elevation: 3,
-              marginRight:10
+              marginRight: 10,
             }}
             onPress={() => {
               setInput1('');
@@ -441,7 +459,7 @@ export function Population() {
         style={{
           paddingLeft: 20,
           paddingRight: 20,
-          marginBottom: 128 + (visibleFilters - 1) * 48    + insets.top,
+          marginBottom: 128 + (visibleFilters - 1) * 48 + insets.top,
         }}
       >
         {searchResult.length ? (

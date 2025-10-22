@@ -200,6 +200,13 @@ const StackNavigator = () => {
         options={{ headerShown: false }}
       />
 
+            <Stack.Screen
+        name="addCrime"
+        component={AddCrime}
+        options={{ headerShown: false }}
+      />
+
+
       <Stack.Screen
         name="getOneFamily"
         component={GetOneFamily}

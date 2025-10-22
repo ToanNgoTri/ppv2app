@@ -1,7 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, FlatList,StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef,useCallback } from 'react';
+import {
+  Text,
+  View,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  BackHandler
+} from 'react-native';
 import { useRoute } from '@react-navigation/native';
-// import RNFS from 'react-native-fs';
+import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
@@ -40,8 +48,8 @@ export function GetOneFamily() {
         .select('*')
         .eq('SOHOK', route.params.screen);
       if (error) {
-        console.log('Error fetching data:', error);}
-      else {
+        console.log('Error fetching data:', error);
+      } else {
         setSearchResult(population);
         console.log('Fetched data:', population);
       }
@@ -49,82 +57,123 @@ export function GetOneFamily() {
     fetchData();
   }, [route.params.screen, navigation]);
 
-function Item({ item, index }) {
-  const isSelected = route.params.CCCD === item['CCCD'];
-  const isEven = index % 2 === 0;
-  console.log();
-  
-  return (
-    <View
-      style={{
-        backgroundColor: isSelected
-          ? '#FFD580' // màu vàng nhạt nổi bật khi trùng CCCD
-          : isEven
-          ? '#F8F9FA'
-          : '#E9ECEF',
-        marginVertical: 6,
-        padding: 14,
-        borderRadius: 12,
-        borderWidth: isSelected ? 2 : 1,
-        borderColor: isSelected ? '#FFA500' : '#CED4DA',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
-      }}
-    >
-      {/* Dòng trên cùng: STT + Quan hệ */}
-      <View
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        route.params ? navigation.pop(2) : navigation.pop()
+ 
+  return true;
+}
+ const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress
+    );        
+        
+
+
+ return () => subscription.remove();
+    }, [navigation])
+  );
+
+  function Item({ item, index }) {
+    const isSelected = route.params.CCCD === item['CCCD'];
+    const isEven = index % 2 === 0;
+    console.log();
+
+    return (
+      <TouchableOpacity
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginBottom: 6,
+          backgroundColor: isSelected
+            ? '#FFD580' // màu vàng nhạt nổi bật khi trùng CCCD
+            : isEven
+            ? '#F8F9FA'
+            : '#E9ECEF',
+          marginVertical: 6,
+          padding: 14,
+          borderRadius: 12,
+          borderWidth: isSelected ? 2 : 1,
+          borderColor: isSelected ? '#FFA500' : '#CED4DA',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 2,
+        }}
+        onLongPress={() => {
+          Alert.alert(
+            'Thông báo',
+            'Bạn có muốn thêm thông tin công dân vào danh sách đối tượng?',
+            [
+              {
+                text: 'Thoát',
+                style: 'cancel',
+              },
+              {
+                text: 'Thêm',
+                onPress: () => {
+                  navigation.push('addCrime', {
+                    data: item,
+                  });
+                },
+              },
+            ],
+          );
         }}
       >
-        <Text style={{ fontSize: 12, color: '#6C757D' }}>STT: {index + 1}</Text>
-
-        <Text
+        {/* Dòng trên cùng: STT + Quan hệ */}
+        <View
           style={{
-            fontSize: 13,
-            fontWeight: item['QUANHE'] === 'CH' ? '700' : '500',
-            color: item['QUANHE'] === 'CH' ? '#B71C1C' : '#495057',
-            backgroundColor: item['QUANHE'] === 'CH' ? '#FFF176' : 'transparent',
-            paddingHorizontal: 8,
-            borderRadius: 6,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginBottom: 6,
           }}
         >
-          Quan hệ: {item['QUANHE']}
-        </Text>
-      </View>
+          <Text style={{ fontSize: 12, color: '#6C757D' }}>
+            STT: {index + 1}
+          </Text>
 
-      {/* Họ và tên */}
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: '700',
-          color: '#212529',
-          marginBottom: 4,
-        }}
-      >
-        {item['HOTEN']}
-      </Text>
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: item['QUANHE'] === 'CH' ? '700' : '500',
+              color: item['QUANHE'] === 'CH' ? '#B71C1C' : '#495057',
+              backgroundColor:
+                item['QUANHE'] === 'CH' ? '#FFF176' : 'transparent',
+              paddingHorizontal: 8,
+              borderRadius: 6,
+            }}
+          >
+            Quan hệ: {item['QUANHE']}
+          </Text>
+        </View>
 
-      {/* Các thông tin chi tiết */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        <Text style={styles.infoText}>Ngày sinh: {item['NAMSINH']}</Text>
-        <Text style={styles.infoText}>
-          Giới tính: {item['GIOITINH'] === true ? 'Nam' : 'Nữ'}
+        {/* Họ và tên */}
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: '700',
+            color: '#212529',
+            marginBottom: 4,
+          }}
+        >
+          {item['HOTEN']}
         </Text>
-        <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
-        <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
-        <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
-        <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
-        <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
-      </View>
-    </View>
-  );
-}
+
+        {/* Các thông tin chi tiết */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          <Text style={styles.infoText}>Ngày sinh: {item['NAMSINH']}</Text>
+          <Text style={styles.infoText}>
+            Giới tính: {item['GIOITINH'] === true ? 'Nam' : 'Nữ'}
+          </Text>
+          <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
+          <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
+          <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
+          <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
+          <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
 
   return (
     <>
@@ -152,7 +201,7 @@ function Item({ item, index }) {
             paddingLeft: 20,
             paddingRight: 20,
             marginBottom: 20,
-            paddingBottom: 60
+            paddingBottom: 60,
             // marginTop: 10,
           }}
         >
@@ -172,5 +221,5 @@ const styles = StyleSheet.create({
     color: '#495057',
     width: '50%', // chia 2 cột
     marginBottom: 4,
-  }
-})
+  },
+});
