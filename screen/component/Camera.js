@@ -76,7 +76,8 @@ export function CameraComponent() {
         .from('population')
         .select('SOHOK')
         .eq('CCCD', cc)
-        .single(); // chỉ lấy 1 dòng
+        .single();
+        // .single(); // chỉ lấy 1 dòng
 
       if (error) {
         console.log('Lỗi Supabase:', error.message);
@@ -87,6 +88,15 @@ export function CameraComponent() {
 
     async function handleQR() {
       if (!qrValue) return;
+
+      console.log('qrValue1',qrValue);
+      
+      const { data, error } = await supabase
+        .from('qrvalue')
+        .update({ value: qrValue })
+        .eq('id', '12345678')
+
+      
 
       const parseCitizenData = str => {
         const parts = str.split('|');
@@ -214,6 +224,10 @@ export function CameraComponent() {
             video={false}
             frameProcessorFps={5}
             photoQualityBalance={'speed'}
+
+              focusable={true}
+              enableZoomGesture
+  focusDepth={0.5}
           />
           {route.params && (
             <TouchableOpacity
