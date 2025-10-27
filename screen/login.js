@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Keyboard,
-  View,
+  View,ImageBackground
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
@@ -102,11 +102,10 @@ export function Login() {
   }
 
   return (
-    <View
+     <ImageBackground
+      source={require("../asset/BG.jpg")} // 👈 ảnh nền trong thư mục assets
       style={styles.container}
-      onPress={() => {
-        Keyboard.dismiss();
-      }}
+      resizeMode='cover'
     >
       <Text style={styles.title}>Đăng nhập</Text>
       <TextInput
@@ -148,7 +147,7 @@ export function Login() {
           <Text style={styles.buttonText}>Đăng ký</Text>
         )}
       </TouchableOpacity>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -164,6 +163,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 20,
     textAlign: 'center',
+    color: '#ffffffff',
   },
   input: {
     borderWidth: 1,
@@ -171,6 +171,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
   },
   button: {
     backgroundColor: '#0066FF',

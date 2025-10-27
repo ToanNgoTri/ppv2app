@@ -16,9 +16,8 @@ import {
   FlatList,
   Keyboard,
   StyleSheet,
-  Alert
+  Alert,
 } from 'react-native';
-import population from '../asset/population.json';
 import { useNavigation } from '@react-navigation/native';
 // import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -49,9 +48,6 @@ export function Population() {
   // const externalDirectoryPath = `${RNFS.ExternalDirectoryPath}`;
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
-  // const HomeScreen = useContext(RefOfHome);
-
-  let data = population;
   useEffect(() => {
     async function getUser() {
       const { data: user } = await supabase.auth.getUser();
@@ -72,21 +68,24 @@ export function Population() {
           })
         }
         onLongPress={() => {
-          Alert.alert('Thông báo', 'Bạn có muốn thêm thông tin công dân vào danh sách đối tượng?', [
-            {
-              text: 'Thoát',
-              style: 'cancel',
-            },
-            {
-              text: 'Thêm',
-              onPress: () => {
-                navigation.push('addCrime', {
-                  data: item,
-
-                });
+          Alert.alert(
+            'Thông báo',
+            'Bạn có muốn thêm thông tin công dân vào danh sách đối tượng?',
+            [
+              {
+                text: 'Thoát',
+                style: 'cancel',
               },
-            },
-          ]);
+              {
+                text: 'Thêm',
+                onPress: () => {
+                  navigation.push('addCrime', {
+                    data: item,
+                  });
+                },
+              },
+            ],
+          );
         }}
         style={{
           backgroundColor: isEven ? '#F8F9FA' : '#E9ECEF',
@@ -152,17 +151,50 @@ export function Population() {
     let query = supabase.from('population').select('*');
     if (input1 !== '') {
       titleFilter1 !== 'GIOITINH'
-        ? (query = query.ilike(titleFilter1, `%${input1}%`))
+        ? titleFilter1 == 'NAMSINH'
+          ? (query = query.ilike(
+              titleFilter1,
+              input1.match(/\.|,|-/gim)
+                ? `%${input1.replace(/\.|,|-/gim, '/')}%`
+                : input1.length <= 4
+                ? `%${input1}%`
+                : input1.length < 8
+                ? `%${input1.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
+                : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+            ))
+          : (query = query.ilike(titleFilter1, `%${input1}%`))
         : (query = query.eq(titleFilter1, input1 === 'NAM' ? true : false));
     }
     if (input2 !== '') {
       titleFilter2 !== 'GIOITINH'
-        ? (query = query.ilike(titleFilter2, `%${input2}%`))
+        ? titleFilter2 == 'NAMSINH'
+          ? (query = query.ilike(
+              titleFilter2,
+              input2.match(/\.|,|-/gim)
+                ? `%${input2.replace(/\.|,|-/gim, '/')}%`
+                : input2.length <= 4
+                ? `%${input2}%`
+                : input2.length < 8
+                ? `%${input2.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
+                : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+            ))
+          : (query = query.ilike(titleFilter2, `%${input2}%`))
         : (query = query.eq(titleFilter2, input2 === 'NAM' ? true : false));
     }
     if (input3 !== '') {
       titleFilter3 !== 'GIOITINH'
-        ? (query = query.ilike(titleFilter3, `%${input3}%`))
+        ? titleFilter3 == 'NAMSINH'
+          ? (query = query.ilike(
+              titleFilter3,
+              input3.match(/\.|,|-/gim)
+                ? `%${input3.replace(/\.|,|-/gim, '/')}%`
+                : input3.length <= 4
+                ? `%${input3}%`
+                : input3.length < 8
+                ? `%${input3.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
+                : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+            ))
+          : (query = query.ilike(titleFilter3, `%${input3}%`))
         : (query = query.eq(titleFilter3, input3 === 'NAM' ? true : false));
     }
 
@@ -240,12 +272,15 @@ export function Population() {
                 : num === 2
                 ? titleFilter2
                 : titleFilter3;
+
+                // console.log('currentTitle:',currentTitle);
+                
             const currentInput =
               num === 1 ? input1 : num === 2 ? input2 : input3;
             const setCurrentInput =
               num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
 
-            const keyboardType = ['NAMSINH'].includes(currentTitle)
+            const keyboardType = ['NAMSINH', 'CCCD'].includes(currentTitle)
               ? 'numeric'
               : 'default';
 
@@ -325,13 +360,13 @@ export function Population() {
                     paddingHorizontal: 10,
                     fontSize: 13,
                     color: '#333',
-                    height: 38,
+                    height: 40,
                   }}
                   value={currentInput}
                   onChangeText={setCurrentInput}
                   autoCapitalize={CapitalBool}
                   keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
-                  placeholder="Nhập từ khóa..."
+                  placeholder={currentTitle !== 'NAMSINH' ?"Nhập từ khóa...":"Dùng . , - hoặc viết liền để thay '/'"}
                   placeholderTextColor="#999"
                   selectTextOnFocus={true}
                   onSubmitEditing={() => pushToSearch()}
