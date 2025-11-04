@@ -16,18 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { useNavigation } from '@react-navigation/native';
 
-// Supabase project info
-const SUPABASE_URL = 'https://your-project-ref.supabase.co';
-const SUPABASE_ANON_KEY = 'public-anon-key';
+import { supabase } from './lib.js';
 
-// Khởi tạo supabase client
-const supabase = createClient(
-  'https://feuakoaglemujpwsspie.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZldWFrb2FnbGVtdWpwd3NzcGllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1Njg5NjYsImV4cCI6MjA3NTE0NDk2Nn0.kduWT_6GWnSyXKNCLPzGn1zcUaYO24Rtnx7fN9wtoO0',
-  {
-    auth: { storage: AsyncStorage },
-  },
-);
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -38,12 +28,23 @@ export function Login() {
 
   const navigation = useNavigation();
 
-  useEffect(() => {
-    // Lấy session khi mở app
-    supabase.auth.getSession().then(({ data }) => {
-      if (data?.session?.user) setUser(data.session.user);
-    });
+  async function autoLogin() {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
 
+      if (keys.length) {
+        const token = await AsyncStorage.getItem(keys[0]);
+        // console.log('token', token);
+        
+        token ? setUser(JSON.parse(token)?.user.id) : null;
+      }
+    } catch (error) {
+      console.error('Lỗi khi đọc AsyncStorage:', error);
+    }
+  }
+
+  useEffect(() => {
+    autoLogin()
     // Theo dõi auth state
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -98,10 +99,15 @@ export function Login() {
       );
     } finally {
       setLoadingSignup(false);
+      setPassword('');
     }
+    // await AsyncStorage.clear();
   }
 
   return (
+    <TouchableOpacity
+      style={{flex:1}} activeOpacity={1}
+    onPress={()=>Keyboard.dismiss()}>
      <ImageBackground
       source={require("../asset/BG.jpg")} // 👈 ảnh nền trong thư mục assets
       style={styles.container}
@@ -148,6 +154,7 @@ export function Login() {
         )}
       </TouchableOpacity>
     </ImageBackground>
+    </TouchableOpacity>
   );
 }
 
