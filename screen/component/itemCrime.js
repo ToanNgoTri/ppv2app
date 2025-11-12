@@ -186,6 +186,7 @@ export function Item({ item, index, location }) {
           <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
           <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
           <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
+          <Text style={styles.infoText}>{item['GIOITINH'] ? 'Vợ:':'Chồng:'} {item['TENVO']}</Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
           {/* <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text> */}
           {item['LOCATION'] ? (

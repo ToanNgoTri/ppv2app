@@ -10,6 +10,7 @@ import {
   Alert,
   Keyboard,
   Platform,
+  ActivityIndicator
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -28,6 +29,7 @@ export function AddCrime() {
     CCCD: '',
     TENCHA: '',
     TENME: '',
+    TENVO: '',
     DANTOC: '',
     TONGIAO: '',
     NOITHTRU: '',
@@ -47,7 +49,7 @@ export function AddCrime() {
 
   const [imageURL, setImageURL] = useState(null);
 
-  // const [LocationGG, setLocationGG] = useState('');
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   // console.log('form', form);
 
@@ -156,8 +158,9 @@ export function AddCrime() {
   //   }
 
   async function saveData(params) {
-    console.log('form.CCCD', form.CCCD.length);
-
+    // console.log('form.CCCD', form.CCCD.length);
+    setLoadingSubmit(true);
+    try {
     if (form.CCCD && form.CCCD.trim() !== '') {
       let dataPush = form
        dataPush = { ...dataPush, GIOITINH: dataPush.GIOITINH === 'Nam' ? true : false }
@@ -185,6 +188,7 @@ export function AddCrime() {
         CCCD: '',
         TENCHA: '',
         TENME: '',
+        TENVO: '',
         DANTOC: '',
         TONGIAO: '',
         NOITHTRU: '',
@@ -204,7 +208,12 @@ export function AddCrime() {
     } else {
       Alert.alert('Thông báo', `Thiếu số Định danh cá nhân`);
     }
-    // return data;
+    } catch (error) {
+      console.error('Lỗi khi lưu dữ liệu:', error);
+      Alert.alert('Lỗi', 'Đã có lỗi xảy ra khi lưu dữ liệu');
+    } finally {
+      setLoadingSubmit(false);
+    }
   }
 
   console.log(form);
@@ -325,7 +334,7 @@ export function AddCrime() {
 
   useEffect(() => {
     if( route.params?.data){
-    navigation.setOptions({ title: `HSHK: ${route.params.data}` }); //đổi title
+    navigation.setOptions({ title: `HSHK: ${route.params.data}` });
 
     setForm({
       ...form,
@@ -337,6 +346,7 @@ export function AddCrime() {
       NOITHTRU: route.params.data['NOITHTRU'],
       TENCHA: route.params.data['TENCHA'],
       TENME: route.params.data['TENME'],
+      TENVO: route.params.data['TENVO'],
       TONGIAO: route.params.data['TONGIAO'],
       SOHOK: route.params.data['SOHOK'],
     });
@@ -362,6 +372,7 @@ export function AddCrime() {
           CCCD: 'Số định danh cá nhân',
           TENCHA: 'Tên cha',
           TENME: 'Tên mẹ',
+          TENVO: 'Tên vợ/chồng',
           DANTOC: 'Dân tộc',
           TONGIAO: 'Tôn giáo',
           NOITHTRU: 'Địa chỉ',
@@ -475,7 +486,11 @@ export function AddCrime() {
           <Text style={styles.cameraText}>📷 Mở Camera</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.saveButton} onPress={() => saveData()}>
+                  {loadingSubmit ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
           <Text style={styles.saveText}>💾 Lưu thông tin</Text>
+                  )}
         </TouchableOpacity>
         {
           route.params &&
