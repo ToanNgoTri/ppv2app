@@ -1,11 +1,3 @@
-// ALTER TABLE crime ADD COLUMN GIOITINH_bool boolean;
-
-// UPDATE crime
-// SET GIOITINH_bool = ("GIOITINH" ILIKE 'Nam');
-
-// update population
-// set province = upper(province);
-
 import SelectDropdown from 'react-native-select-dropdown';
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import {
@@ -17,15 +9,18 @@ import {
   Keyboard,
   StyleSheet,
   Alert,
+  PermissionsAndroid,
+  Image,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 // import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
-// import { createClient } from '@supabase/supabase-js'
-// import 'react-native-url-polyfill/auto' // nếu bạn dùng React Native CLI
-// import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import VoiceToText, {
+  VoiceToTextEvents,
+} from '@appcitor/react-native-voice-to-text';
 export function Population() {
   // const supabase = createClient('https://feuakoaglemujpwsspie.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZldWFrb2FnbGVtdWpwd3NzcGllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1Njg5NjYsImV4cCI6MjA3NTE0NDk2Nn0.kduWT_6GWnSyXKNCLPzGn1zcUaYO24Rtnx7fN9wtoO0', {
   //   auth: { storage: AsyncStorage },
@@ -45,15 +40,44 @@ export function Population() {
 
   const [visibleFilters, setVisibleFilters] = useState(1);
 
-  // const externalDirectoryPath = `${RNFS.ExternalDirectoryPath}`;
+  const [isListening, setIsListening] = useState(false);
+  // const [results, setResults] = useState([]);
+
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
   useEffect(() => {
     async function getUser() {
       const { data: user } = await supabase.auth.getUser();
-      console.log('auth.uid():', user.user?.id);
+      // console.log('auth.uid():', user.user?.id);
     }
     getUser();
+
+    const resultsListener = VoiceToText.addEventListener(
+      VoiceToTextEvents.RESULTS,
+      event => {
+        setInput1(event.value.toUpperCase());
+      },
+    );
+
+    const startListener = VoiceToText.addEventListener(
+      VoiceToTextEvents.START,
+      () => setIsListening(true),
+    );
+
+    const endListener = VoiceToText.addEventListener(
+      VoiceToTextEvents.END,
+      () => setIsListening(false),
+    );
+
+    // Clean up
+    return () => {
+      VoiceToText.destroy();
+      resultsListener.remove();
+      startListener.remove();
+      endListener.remove();
+            setIsListening(false)
+
+    };
   }, []);
 
   function Item({ item, index }) {
@@ -159,8 +183,8 @@ export function Population() {
                 : input1.length <= 4
                 ? `%${input1}%`
                 : input1.length < 8
-                ? `%${input1.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
-                : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+                ? `%${input1.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
+                : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter1, `%${input1}%`))
         : (query = query.eq(titleFilter1, input1 === 'NAM' ? true : false));
@@ -175,8 +199,8 @@ export function Population() {
                 : input2.length <= 4
                 ? `%${input2}%`
                 : input2.length < 8
-                ? `%${input2.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
-                : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+                ? `%${input2.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
+                : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter2, `%${input2}%`))
         : (query = query.eq(titleFilter2, input2 === 'NAM' ? true : false));
@@ -191,8 +215,8 @@ export function Population() {
                 : input3.length <= 4
                 ? `%${input3}%`
                 : input3.length < 8
-                ? `%${input3.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
-                : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+                ? `%${input3.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
+                : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter3, `%${input3}%`))
         : (query = query.eq(titleFilter3, input3 === 'NAM' ? true : false));
@@ -239,6 +263,41 @@ export function Population() {
     'TENME',
   ];
 
+  async function requestMicrophonePermission() {
+    if (Platform.OS !== 'android') return true;
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        {
+          title: 'Microphone Permission',
+          message:
+            'This app needs access to your microphone for speech recognition',
+          buttonPositive: 'OK',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  }
+  const toggleListening = async () => {
+    const ok = await requestMicrophonePermission();
+    if (!ok) return;
+
+    try {
+      if (isListening) {
+        await VoiceToText.stopListening();
+        setIsListening(false);
+      } else {
+        await VoiceToText.startListening();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <View
@@ -273,8 +332,8 @@ export function Population() {
                 ? titleFilter2
                 : titleFilter3;
 
-                // console.log('currentTitle:',currentTitle);
-                
+            // console.log('currentTitle:',currentTitle);
+
             const currentInput =
               num === 1 ? input1 : num === 2 ? input2 : input3;
             const setCurrentInput =
@@ -349,29 +408,60 @@ export function Population() {
                   }}
                 />
 
-                <TextInput
+                <View
                   style={{
-                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     backgroundColor: '#f9f9f9',
                     borderRadius: 8,
                     borderWidth: 1,
                     borderColor: '#ccc',
-                    marginLeft: 8,
                     paddingHorizontal: 10,
-                    fontSize: 13,
-                    color: '#333',
                     height: 40,
+                    flex: 1,
+                    marginLeft: 8,
                   }}
-                  value={currentInput}
-                  onChangeText={setCurrentInput}
-                  autoCapitalize={CapitalBool}
-                  keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
-                  placeholder={currentTitle !== 'NAMSINH' ?"Nhập từ khóa...":"Dùng . , - hoặc viết liền để thay '/'"}
-                  placeholderTextColor="#999"
-                  selectTextOnFocus={true}
-                  onSubmitEditing={() => pushToSearch()}
-                />
+                >
+                  <TextInput
+                    style={{
+                      flex: 1,
+                      fontSize: 13,
+                      color: '#333',
+                    }}
+                    value={currentInput}
+                    onChangeText={setCurrentInput}
+                    autoCapitalize={CapitalBool}
+                    keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
+                    placeholder={
+                      currentTitle !== 'NAMSINH'
+                        ? 'Nhập từ khóa...'
+                        : "Dùng . , - hoặc viết liền để thay '/'"
+                    }
+                    placeholderTextColor="#999"
+                    selectTextOnFocus={true}
+                    onSubmitEditing={() => pushToSearch()}
+                  />
+                  {num == 1 && (
+                    <TouchableOpacity
+                      onPress={toggleListening}
+                      style={{ marginLeft: 8 }}
+                    >
+                      <Image
+                        source={
+                          !isListening
+                            ? require('../asset/micro-on.png')
+                            : require('../asset/micro-off.png')
+                        }
+                        style={{
+                          width: 24,
+                          height: 24,
+                        }}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
+              // </View>
             );
           })}
         </View>

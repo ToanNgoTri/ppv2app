@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   FlatList,
   Keyboard,
-  Image,
   StyleSheet,
+  PermissionsAndroid,
+  Image,
 } from 'react-native';
 // import crime from '../asset/crime.json';
 import { useNavigation } from '@react-navigation/native';
@@ -32,7 +33,7 @@ export function Crime() {
   const [visibleFilters, setVisibleFilters] = useState(1);
 
   const [searchResutl, setSearchResult] = useState([]);
-  const navigation = useNavigation();
+
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
@@ -44,7 +45,9 @@ export function Crime() {
     let query = supabase.from('crime').select('*');
     if (input1 !== '') {
       titleFilter1 !== 'GIOITINH'
-        ? titleFilter1 == 'NAMSINH' || titleFilter1 == 'DAYARRES' || titleFilter1 == 'FREEDAY'
+        ? titleFilter1 == 'NAMSINH' ||
+          titleFilter1 == 'DAYARRES' ||
+          titleFilter1 == 'FREEDAY'
           ? (query = query.ilike(
               titleFilter1,
               input1.match(/\.|,|-/gim)
@@ -52,15 +55,17 @@ export function Crime() {
                 : input1.length <= 4
                 ? `%${input1}%`
                 : input1.length < 8
-                ? `%${input1.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
-                : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+                ? `%${input1.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
+                : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter1, `%${input1}%`))
         : (query = query.eq(titleFilter1, input1 === 'NAM' ? true : false));
     }
     if (input2 !== '') {
       titleFilter2 !== 'GIOITINH'
-        ? titleFilter2 == 'NAMSINH' || titleFilter2 == 'DAYARRES' || titleFilter2  == 'FREEDAY'
+        ? titleFilter2 == 'NAMSINH' ||
+          titleFilter2 == 'DAYARRES' ||
+          titleFilter2 == 'FREEDAY'
           ? (query = query.ilike(
               titleFilter2,
               input2.match(/\.|,|-/gim)
@@ -68,15 +73,17 @@ export function Crime() {
                 : input2.length <= 4
                 ? `%${input2}%`
                 : input2.length < 8
-                ? `%${input2.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
-                : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+                ? `%${input2.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
+                : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter2, `%${input2}%`))
         : (query = query.eq(titleFilter2, input2 === 'NAM' ? true : false));
     }
     if (input3 !== '') {
       titleFilter3 !== 'GIOITINH'
-        ? titleFilter3 == 'NAMSINH' || titleFilter3  == 'DAYARRES' || titleFilter3 == 'FREEDAY'
+        ? titleFilter3 == 'NAMSINH' ||
+          titleFilter3 == 'DAYARRES' ||
+          titleFilter3 == 'FREEDAY'
           ? (query = query.ilike(
               titleFilter3,
               input3.match(/\.|,|-/gim)
@@ -84,8 +91,8 @@ export function Crime() {
                 : input3.length <= 4
                 ? `%${input3}%`
                 : input3.length < 8
-                ? `%${input3.replace(/^(\d{2})(\d{4})$/, "$1/$2")}%`
-                : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3")}%`,
+                ? `%${input3.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
+                : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter3, `%${input3}%`))
         : (query = query.eq(titleFilter3, input3 === 'NAM' ? true : false));
@@ -124,12 +131,9 @@ export function Crime() {
       .eq('CCCD', receive.CCCD); // điều kiện cập nhật
   };
 
+
   return (
-    <View
-      style={{ flex: 1 }}
-      // behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 5} // Điều chỉnh offset cho iOS
-    >
+    <View style={{ flex: 1 }}>
       <View
         style={{
           alignItems: 'center',
@@ -153,7 +157,7 @@ export function Crime() {
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 3,
-            paddingTop:0
+            paddingTop: 0,
           }}
         >
           {[1, 2, 3].slice(0, visibleFilters).map(num => {
@@ -165,19 +169,24 @@ export function Crime() {
                 ? titleFilter2
                 : titleFilter3;
 
-                console.log('currentTitle:',currentTitle);
-                
+            console.log('currentTitle:', currentTitle);
 
             // Quy định keyboardType tùy theo tiêu chí
-            const keyboardType = ['NAMSINH', 'DAYARRES', 'FREEDAY','CCCD'].includes(
-              currentTitle,
-            )
+            const keyboardType = [
+              'NAMSINH',
+              'DAYARRES',
+              'FREEDAY',
+              'CCCD',
+            ].includes(currentTitle)
               ? 'numeric'
               : 'default';
 
-            const CapitalBool = ['NAMSINH', 'DAYARRES', 'FREEDAY','CCCD'].includes(
-              currentTitle,
-            )
+            const CapitalBool = [
+              'NAMSINH',
+              'DAYARRES',
+              'FREEDAY',
+              'CCCD',
+            ].includes(currentTitle)
               ? 'none'
               : 'characters';
 
@@ -271,26 +280,43 @@ export function Crime() {
                   />
                 </View>
 
-                <TextInput
+                <View
                   style={{
-                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#f9f9f9',
                     borderRadius: 8,
-                    borderColor: '#ccc',
                     borderWidth: 1,
-                    paddingLeft: 10,
-                    flex: 1,
+                    borderColor: '#ccc',
+                    paddingHorizontal: 10,
                     height: 40,
-                    fontSize: 13,
+                    flex: 1,
+                    // marginLeft: 8,
                   }}
-                  value={currentInput}
-                  onChangeText={setCurrentInput}
-                  placeholder={currentTitle == 'NAMSINH' || currentTitle == 'DAYARRES'|| currentTitle == 'FREEDAY' ?"Dùng . , - hoặc viết liền để thay '/'":"Nhập từ khóa..."}
-                  placeholderTextColor={'gray'}
-                  selectTextOnFocus={true}
-                  autoCapitalize={CapitalBool}
-                  keyboardType={keyboardType} // ✅ auto đổi
-                  onSubmitEditing={() => pushToSearch()}
-                />
+                >
+                  <TextInput
+                    style={{
+                      flex: 1,
+                      fontSize: 13,
+                      color: '#333',
+                    }}
+                    value={currentInput}
+                    onChangeText={setCurrentInput}
+                    placeholder={
+                      currentTitle == 'NAMSINH' ||
+                      currentTitle == 'DAYARRES' ||
+                      currentTitle == 'FREEDAY'
+                        ? "Dùng . , - hoặc viết liền để thay '/'"
+                        : 'Nhập từ khóa...'
+                    }
+                    placeholderTextColor={'gray'}
+                    selectTextOnFocus={true}
+                    autoCapitalize={CapitalBool}
+                    keyboardType={keyboardType} // ✅ auto đổi
+                    onSubmitEditing={() => pushToSearch()}
+                  />
+
+                </View>
               </View>
             );
           })}
