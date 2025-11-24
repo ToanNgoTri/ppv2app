@@ -11,12 +11,14 @@ import {
   Alert,
   PermissionsAndroid,
   Image,
+  ActivityIndicator
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 // import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 import VoiceToText, {
   VoiceToTextEvents,
@@ -45,6 +47,9 @@ export function Population() {
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
+    const netInfo = useNetInfo();
+    let internetConnected = netInfo.isConnected;
+  
   useEffect(() => {
     async function getUser() {
       const { data: user } = await supabase.auth.getUser();
@@ -300,6 +305,33 @@ export function Population() {
 
   return (
     <>
+
+          {!internetConnected && (
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            opacity: 0.7,
+            backgroundColor: 'black',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10,
+          }}>
+          <Text
+            style={{
+              color: 'white',
+              marginBottom: 15,
+              fontWeight: 'bold',
+            }}>
+            Vui lòng kiểm tra kết nối mạng ...
+          </Text>
+          <ActivityIndicator size="large" color="white"></ActivityIndicator>
+        </View>
+      )}
+
       <View
         style={{
           alignItems: 'center',

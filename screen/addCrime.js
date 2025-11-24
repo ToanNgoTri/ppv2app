@@ -19,6 +19,7 @@ import { decode } from 'base64-arraybuffer';
 import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 export function AddCrime() {
   const [form, setForm] = useState({
@@ -51,7 +52,8 @@ export function AddCrime() {
 
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  // console.log('form', form);
+    const netInfo = useNetInfo();
+    let internetConnected = netInfo.isConnected;
 
   const inputRefs = useRef([]);
   console.log('imageURL', imageURL);
@@ -356,6 +358,34 @@ export function AddCrime() {
 
   }, [route.params, navigation]);
   return (
+    <>
+
+                  {!internetConnected && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    opacity: 0.7,
+                    backgroundColor: 'black',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 10,
+                  }}>
+                  <Text
+                    style={{
+                      color: 'white',
+                      marginBottom: 15,
+                      fontWeight: 'bold',
+                    }}>
+                    Vui lòng kiểm tra kết nối mạng ...
+                  </Text>
+                  <ActivityIndicator size="large" color="white"></ActivityIndicator>
+                </View>
+              )}
+    
     <ScrollView
       contentContainerStyle={{ ...styles.container, padding: 10 + insets.top }}
       ref={scrollViewRef}
@@ -500,6 +530,7 @@ export function AddCrime() {
         }
       </View>
     </ScrollView>
+    </>
   );
 }
 const styles = StyleSheet.create({

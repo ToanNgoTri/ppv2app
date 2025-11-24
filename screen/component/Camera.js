@@ -19,6 +19,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
 import { supabase } from '../lib.js';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 export function CameraComponent() {
   const [qrValue, setQrValue] = useState(null);
@@ -47,7 +48,8 @@ export function CameraComponent() {
     },
   });
 
-  // ✅ Xin quyền camera
+    const netInfo = useNetInfo();
+    let internetConnected = netInfo.isConnected;
 
   useFocusEffect(
     useCallback(() => {
@@ -212,7 +214,33 @@ export function CameraComponent() {
   // ✅ Giao diện chính
   return (
     <View style={styles.container}>
-      {!photo ? (
+                        {!internetConnected ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    opacity: 0.7,
+                    backgroundColor: 'black',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 10,
+                  }}>
+                  <Text
+                    style={{
+                      color: 'white',
+                      marginBottom: 15,
+                      fontWeight: 'bold',
+                    }}>
+                    Vui lòng kiểm tra kết nối mạng ...
+                  </Text>
+                  <ActivityIndicator size="large" color="white"></ActivityIndicator>
+                </View>
+              ):(
+                <>
+                      {!photo ? (
         <>
           <Camera
             ref={camera}
@@ -252,6 +280,11 @@ export function CameraComponent() {
           </TouchableOpacity>
         </View>
       )}
+
+                </>
+              )}
+        
+
     </View>
   );
 }

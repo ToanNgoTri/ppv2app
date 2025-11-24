@@ -8,13 +8,10 @@ import {
   FlatList,
   Keyboard,
   StyleSheet,
-  PermissionsAndroid,
-  Image,
+ActivityIndicator
 } from 'react-native';
 // import crime from '../asset/crime.json';
-import { useNavigation } from '@react-navigation/native';
-import { Table, Row, Rows } from 'react-native-table-component';
-// import RNFS from 'react-native-fs';
+import { useNetInfo } from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 import { Item } from './component/itemCrime.js';
@@ -34,6 +31,8 @@ export function Crime() {
 
   const [searchResutl, setSearchResult] = useState([]);
 
+    const netInfo = useNetInfo();
+    let internetConnected = netInfo.isConnected;
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
@@ -134,6 +133,34 @@ export function Crime() {
 
   return (
     <View style={{ flex: 1 }}>
+
+              {!internetConnected && (
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                opacity: 0.7,
+                backgroundColor: 'black',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 10,
+              }}>
+              <Text
+                style={{
+                  color: 'white',
+                  marginBottom: 15,
+                  fontWeight: 'bold',
+                }}>
+                Vui lòng kiểm tra kết nối mạng ...
+              </Text>
+              <ActivityIndicator size="large" color="white"></ActivityIndicator>
+            </View>
+          )}
+    
+    
       <View
         style={{
           alignItems: 'center',
