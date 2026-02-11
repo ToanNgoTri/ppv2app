@@ -10,14 +10,14 @@ import {
   ActivityIndicator,
   StyleSheet,
   Keyboard,
-  View,ImageBackground
+  View,
+  ImageBackground,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { useNavigation } from '@react-navigation/native';
 
 import { supabase } from './lib.js';
-
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -35,7 +35,7 @@ export function Login() {
       if (keys.length) {
         const token = await AsyncStorage.getItem(keys[0]);
         // console.log('token', token);
-        
+
         token ? setUser(JSON.parse(token)?.user.id) : null;
       }
     } catch (error) {
@@ -44,7 +44,7 @@ export function Login() {
   }
 
   useEffect(() => {
-    autoLogin()
+    autoLogin();
     // Theo dõi auth state
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -106,54 +106,57 @@ export function Login() {
 
   return (
     <TouchableOpacity
-      style={{flex:1}} activeOpacity={1}
-    onPress={()=>Keyboard.dismiss()}>
-     <ImageBackground
-      source={require("../asset/BG.jpg")} // 👈 ảnh nền trong thư mục assets
-      style={styles.container}
-      resizeMode='cover'
+      style={{ flex: 1 }}
+      activeOpacity={1}
+      onPress={() => Keyboard.dismiss()}
     >
-      <Text style={styles.title}>Đăng nhập</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-        placeholderTextColor={'gray'}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập Mật khẩu"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        placeholderTextColor={'gray'}
-      />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={signIn}
-        disabled={loadingLogin || loadingSignup}
+      <ImageBackground
+        source={require('../asset/BG.jpg')} // 👈 ảnh nền trong thư mục assets
+        style={styles.container}
+        resizeMode="cover"
       >
-        {loadingLogin ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Đăng nhập</Text>
-        )}
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, styles.secondary]}
-        onPress={signUp}
-        disabled={loadingLogin || loadingSignup}
-      >
-        {loadingSignup ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Đăng ký</Text>
-        )}
-      </TouchableOpacity>
-    </ImageBackground>
+        <Text style={styles.title}>Đăng nhập</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Nhập Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+          placeholderTextColor={'gray'}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Nhập Mật khẩu"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          placeholderTextColor={'gray'}
+          textContentType=""
+        />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={signIn}
+          disabled={loadingLogin || loadingSignup}
+        >
+          {loadingLogin ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Đăng nhập</Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.secondary]}
+          onPress={signUp}
+          disabled={loadingLogin || loadingSignup}
+        >
+          {loadingSignup ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Đăng ký</Text>
+          )}
+        </TouchableOpacity>
+      </ImageBackground>
     </TouchableOpacity>
   );
 }
@@ -180,6 +183,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#fff',
     paddingHorizontal: 10,
+    color: 'black',
   },
   button: {
     backgroundColor: '#0066FF',
