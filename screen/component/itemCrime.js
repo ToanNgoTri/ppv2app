@@ -8,26 +8,40 @@ import {
   ScrollView,
   Alert,
   Platform,
+  TextInput,
 } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 export function Item({ item, index, location }) {
   const [imageExists, setImageExists] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [LocationGG, setLocationGG] = useState('');
+  const [showGhiChu, setShowGhiChu] = useState(false);
+  /* ================= GHI CHÚ ================= */
+  const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
+  const saveTimeout = useRef(null);
 
-  const tableHead = [
-    '#',
-    'Tội danh',
-    'Thời hạn',
-    'Ngày bắt',
-    'Ngày CH xong',
-    'Nơi CH',
-  ];
-  const widthArr = [40, 150, 80, 80, 100, 100];
+  const onChangeGhiChu = text => {
+    setGhiChu(text);
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
 
+    saveTimeout.current = setTimeout(async () => {
+      const { error } = await supabase
+        .from('crime')
+        .update({ GHICHU: text })
+        .eq('CCCD', item['CCCD']);
+
+      if (error) console.log('Lỗi lưu GHICHU:', error.message);
+    }, 600);
+  };
+
+  useEffect(() => {
+    return () => saveTimeout.current && clearTimeout(saveTimeout.current);
+  }, []);
+
+  /* ================= ẢNH ================= */
   useEffect(() => {
     async function checkImage() {
       const path = `subject/${item['CCCD']}.jpg`;
@@ -38,15 +52,23 @@ export function Item({ item, index, location }) {
         if (res.ok) {
           setImageExists(true);
           setImageUrl(url);
-        } else setImageExists(false);
-      } catch {
-        setImageExists(false);
-      }
+        }
+      } catch {}
     }
     checkImage();
   }, [item['CCCD']]);
 
-  // Chuyển chuỗi tội danh thành mảng dữ liệu
+  /* ================= BẢNG TỘI DANH ================= */
+  const tableHead = [
+    '#',
+    'Tội danh',
+    'Thời hạn',
+    'Ngày bắt',
+    'Ngày CH xong',
+    'Nơi CH',
+  ];
+  const widthArr = [40, 150, 80, 80, 100, 100];
+
   const chargeArr = item['CHARGE']?.split(';') || [];
   const fullInfoCrime = chargeArr.map((_, i) => [
     i + 1,
@@ -57,6 +79,7 @@ export function Item({ item, index, location }) {
     item['DETENTION']?.split(';')[i] || '',
   ]);
 
+  /* ================= MAP ================= */
   const convertToDMS = (decimal, isLat) => {
     const degrees = Math.floor(Math.abs(decimal));
     const minutesFloat = (Math.abs(decimal) - degrees) * 60;
@@ -68,61 +91,10 @@ export function Item({ item, index, location }) {
 
   const convertCoordinates = coordString => {
     const [latStr, lonStr] = coordString.split(',').map(s => s.trim());
-    const lat = parseFloat(latStr);
-    const lon = parseFloat(lonStr);
-    return `${convertToDMS(lat, true)},${convertToDMS(lon, false)}`;
-  };
-
-  const getCoordsFromShortLink = async shortUrl => {
-    console.log('getCoordsFromShortLink');
-
-    const response = await fetch(shortUrl, { redirect: 'follow' });
-    const finalUrl = response.url;
-    console.log('finalUrl', finalUrl);
-
-    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    if (!match) {
-      match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
-    }
-    console.log('match1', match);
-
-    if (!match) return { finalUrl };
-    return {
-      location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
-      finalUrl,
-    };
-  };
-
-  const extractLatLngFromGoogleMapsUrl = async url => {
-    let result = await getCoordsFromShortLink(url);
-    console.log('result1', result);
-
-    // console.log('result.finalUrl', result.finalUrl);
-
-    const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-
-    if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
-    return result.location;
-  };
-
-  const pushToSetLocation = async () => {
-    const toado = await extractLatLngFromGoogleMapsUrl(LocationGG);
-    // console.log('toado', toado);
-
-    if (!toado) {
-      Alert.alert(
-        'Lỗi',
-        'Không tìm thấy tọa độ trong liên kết ' +
-          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
-          ' Map',
-      );
-      setLocationGG('');
-      return;
-    }
-
-    location({ CCCD: item['CCCD'], location: toado });
-    setLocationGG('');
-    Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+    return `${convertToDMS(parseFloat(latStr), true)},${convertToDMS(
+      parseFloat(lonStr),
+      false,
+    )}`;
   };
 
   const getCopiedText = async () => {
@@ -131,50 +103,26 @@ export function Item({ item, index, location }) {
   };
 
   async function deleteLocation() {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('crime')
-      .update({ LOCATION: null }) // giá trị mới
-      .eq('CCCD', item['CCCD']); // điều kiện cập nhật
+      .update({ LOCATION: null })
+      .eq('CCCD', item['CCCD']);
 
-    if (error) {
-      Alert.alert('Cập nhật thất bại', 'Vui lòng thử lại');
-    } else {
-      Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
-    }
+    Alert.alert(error ? 'Cập nhật thất bại' : 'Đã xoá vị trí');
   }
 
+  /* ================= UI ================= */
   return (
-    <View
-      style={{
-        backgroundColor: 'white',
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#DEE2E6',
-        marginVertical: 8,
-        padding: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 3,
-      }}
-    >
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginBottom: 8,
-          // backgroundColor:'red'
-        }}
-      >
-        <Text style={{ fontWeight: 'bold', color: '#0D6EFD' }}>
+    <View style={styles.card}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.name}>
           {index}. {item['HOTEN']}
         </Text>
-        <Text style={{ color: '#6C757D', fontSize: 12 }}>{item['CCCD']}</Text>
+        <Text style={styles.cccd}>{item['CCCD']}</Text>
       </View>
 
-      {/* Thông tin + ảnh */}
+      {/* INFO + IMAGE */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}>
           <Text style={styles.infoText}>Tên khác: {item['TENKHAC']}</Text>
@@ -186,12 +134,13 @@ export function Item({ item, index, location }) {
           <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
           <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
           <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
-          <Text style={styles.infoText}>{item['GIOITINH'] ? 'Vợ:':'Chồng:'} {item['TENVO']}</Text>
+          <Text style={styles.infoText}>
+            {item['GIOITINH'] ? 'Vợ' : 'Chồng'}: {item['TENVO']}
+          </Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
-          {/* <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text> */}
+
           {item['LOCATION'] ? (
             <TouchableOpacity
-              style={{ marginTop: 6 }}
               onPress={() =>
                 Linking.openURL(
                   `https://www.google.com/maps/place/${convertCoordinates(
@@ -199,80 +148,39 @@ export function Item({ item, index, location }) {
                   )}`,
                 )
               }
-              onLongPress={() => {
-                Alert.alert('Thông báo', 'Bạn có muốn xóa vị trí không?', [
-                  {
-                    text: 'Thoát',
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'Xoá',
-                    onPress: () => {
-                      deleteLocation();
-                    },
-                  },
-                ]);
-              }}
+              onLongPress={deleteLocation}
             >
               <Text style={{ color: '#0D6EFD', fontWeight: '600' }}>
-                📍 Xem vị trí trên bản đồ
-              </Text>
-            </TouchableOpacity>
-          ) : !LocationGG ? (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#0D6EFD',
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onPress={getCopiedText}
-            >
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
+                📍 Xem vị trí
               </Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#1ed206ff',
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onPress={pushToSetLocation}
-            >
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Gửi
+            <TouchableOpacity style={styles.mapBtn} onPress={getCopiedText}>
+              <Text style={styles.mapBtnText}>
+                Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
               </Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={{ flex: 1, alignItems: 'center' }}>
+        <View style={{ flex: 1 }}>
+                  <TouchableOpacity
+          onPress={() => setShowGhiChu(prev => !prev)}
+        >
+
           <Image
             source={
               imageExists
                 ? { uri: imageUrl }
                 : require('../../asset/unknow.jpg')
             }
-            style={{
-              width: '100%',
-              height: 210,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: '#CED4DA',
-            }}
-            resizeMode="cover"
+            style={styles.image}
           />
+        </TouchableOpacity>
         </View>
       </View>
 
-      {/* Bảng tội danh */}
+      {/* BẢNG TỘI DANH */}
       <View style={{ marginTop: 12 }}>
         <ScrollView horizontal>
           <Table borderStyle={{ borderWidth: 1, borderColor: '#ADB5BD' }}>
@@ -286,44 +194,81 @@ export function Item({ item, index, location }) {
                 textAlign: 'center',
               }}
             />
-            {fullInfoCrime.map((rowData, i) => (
+            {fullInfoCrime.map((row, i) => (
               <Row
                 key={i}
-                data={rowData}
+                data={row}
                 widthArr={widthArr}
-                style={{
-                  backgroundColor:
-                    rowData[1].includes('?') || rowData[4].includes('?')
-                      ? '#FFF3CD'
-                      : i % 2
-                      ? '#F8F9FA'
-                      : 'white',
-                }}
                 textStyle={{ fontSize: 11, textAlign: 'center' }}
               />
             ))}
           </Table>
         </ScrollView>
       </View>
+
+      {/* GHI CHÚ */}
+        {showGhiChu && (
+          <View style={{ marginTop: 10 }}>
+            <TextInput
+              value={ghiChu}
+              onChangeText={onChangeGhiChu}
+              placeholder="Nhập ghi chú..."
+              multiline
+              style={{
+                minHeight: 90,
+                borderWidth: 1,
+                borderColor: '#CED4DA',
+                borderRadius: 8,
+                padding: 10,
+                fontSize: 13,
+                backgroundColor: '#F8F9FA',
+                textAlignVertical: 'top',
+              }}
+            />
+          </View>
+        )}
     </View>
   );
 }
 
+/* ================= STYLE ================= */
 const styles = {
-  infoText: {
-    fontSize: 13,
-    color: '#495057',
-    marginBottom: 3,
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#DEE2E6',
+    marginVertical: 8,
+    padding: 12,
+    elevation: 3,
   },
-  // input: {
-  //   marginTop: 6,
-  //   height: 38,
-  //   width: '100%',
-  //   borderWidth: 1,
-  //   borderColor: '#CED4DA',
-  //   borderRadius: 8,
-  //   paddingHorizontal: 8,
-  //   fontSize: 12,
-  //   backgroundColor: '#F8F9FA',
-  // },
+  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  name: { fontWeight: 'bold', color: '#0D6EFD' },
+  cccd: { fontSize: 12, color: '#6C757D' },
+  infoText: { fontSize: 13, color: '#495057', marginBottom: 3 },
+  image: {
+    width: '100%',
+    height: 210,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#CED4DA',
+  },
+  noteInput: {
+    minHeight: 90,
+    borderWidth: 1,
+    borderColor: '#CED4DA',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 13,
+    backgroundColor: '#F8F9FA',
+    textAlignVertical: 'top',
+  },
+  mapBtn: {
+    backgroundColor: '#0D6EFD',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  mapBtnText: { color: 'white', fontWeight: '600', fontSize: 14 },
 };

@@ -29,18 +29,12 @@ export function Login() {
   const navigation = useNavigation();
 
   async function autoLogin() {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-
-      if (keys.length) {
-        const token = await AsyncStorage.getItem(keys[0]);
-        // console.log('token', token);
-
-        token ? setUser(JSON.parse(token)?.user.id) : null;
-      }
-    } catch (error) {
-      console.error('Lỗi khi đọc AsyncStorage:', error);
-    }
+   try {
+    const { data } = await supabase.auth.getSession();
+    setUser(data?.session?.user ?? null);
+  } catch (error) {
+    console.error('Auto login error:', error);
+  }
   }
 
   useEffect(() => {

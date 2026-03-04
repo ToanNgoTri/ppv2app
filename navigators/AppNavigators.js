@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+
 import { Population } from '../screen/population';
 import { Crime } from '../screen/crime';
 import { AddCrime } from '../screen/addCrime';
@@ -11,6 +12,7 @@ import { MapScreen } from '../screen/mapScreen';
 import { GetOneFamily } from '../screen/getOneFamily';
 import { CameraComponent } from '../screen/component/Camera';
 import { Login } from '../screen/login';
+import ExploreTopTab from './ExploreTopTab';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -25,7 +27,8 @@ function CustomTabBar({ navigation, state }) {
     { name: 'Tìm công dân', ref: 'SearchPopulationRef' },
     { name: 'Tìm đối tượng', ref: 'SearchCrimeRef' },
     { name: 'Bản đồ' },
-    { name: 'Thêm đối tượng', ref: 'SearchCrimeRef' },
+      { name: 'Ghi chú' },
+    // { name: 'Thêm đối tượng', ref: 'SearchCrimeRef' },
   ];
 
   return (
@@ -169,7 +172,9 @@ export function AppNavigators() {
       <Tab.Screen name="Tìm công dân" component={Population} />
       <Tab.Screen name="Tìm đối tượng" component={Crime} />
       <Tab.Screen name="Bản đồ" component={MapScreen} />
-      <Tab.Screen name="Thêm đối tượng" component={AddCrime} />
+      <Tab.Screen name="Ghi chú" component={ExploreTopTab} />
+
+        {/* <Tab.Screen name="Thêm đối tượng" component={AddCrime} /> */}
     </Tab.Navigator>
   );
 }
