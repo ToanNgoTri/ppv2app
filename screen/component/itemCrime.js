@@ -111,6 +111,59 @@ export function Item({ item, index, location }) {
     Alert.alert(error ? 'Cập nhật thất bại' : 'Đã xoá vị trí');
   }
 
+    const pushToSetLocation = async () => {
+    const toado = await extractLatLngFromGoogleMapsUrl(LocationGG);
+    // console.log('toado', toado);
+
+    if (!toado) {
+      Alert.alert(
+        'Lỗi',
+        'Không tìm thấy tọa độ trong liên kết ' +
+          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
+          ' Map',
+      );
+      setLocationGG('');
+      return;
+    }
+
+    location({ CCCD: item['CCCD'], location: toado });
+    setLocationGG('');
+    Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+  };
+
+    const extractLatLngFromGoogleMapsUrl = async url => {
+    let result = await getCoordsFromShortLink(url);
+    console.log('result1', result);
+
+    // console.log('result.finalUrl', result.finalUrl);
+
+    const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+    if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
+    return result.location;
+  };
+  
+    const getCoordsFromShortLink = async shortUrl => {
+    console.log('getCoordsFromShortLink');
+
+    const response = await fetch(shortUrl, { redirect: 'follow' });
+    const finalUrl = response.url;
+    console.log('finalUrl', finalUrl);
+
+    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (!match) {
+      match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
+    }
+    console.log('match1', match);
+
+    if (!match) return { finalUrl };
+    return {
+      location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
+      finalUrl,
+    };
+  };
+
+  
   /* ================= UI ================= */
   return (
     <View style={styles.card}>
@@ -154,10 +207,36 @@ export function Item({ item, index, location }) {
                 📍 Xem vị trí
               </Text>
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.mapBtn} onPress={getCopiedText}>
-              <Text style={styles.mapBtnText}>
+          ) : !LocationGG ? (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#0D6EFD',
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={getCopiedText}
+            >
+              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
                 Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#1ed206ff',
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={pushToSetLocation}
+            >
+              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                Gửi
               </Text>
             </TouchableOpacity>
           )}

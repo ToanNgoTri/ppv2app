@@ -36,6 +36,18 @@ export default function ScreenA({ route }) {
       setLoading(false);
     }
   };
+const deleteItem = id => {
+  setItems(prev => {
+    const newItems = prev.filter(item => item.id !== id);
+
+    // luôn giữ ít nhất 1 dòng
+    if (newItems.length === 0) {
+      return [{ id: Date.now().toString(), text: '', checked: false }];
+    }
+
+    return newItems;
+  });
+};
 
   const saveData = async () => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -56,14 +68,18 @@ export default function ScreenA({ route }) {
     }, 50);
   };
 
-  const updateText = (id, text) => {
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, text } : item,
-      ),
-    );
-  };
+const updateText = (id, text) => {
+  if (text.trim() === '') {
+    deleteItem(id);
+    return;
+  }
 
+  setItems(prev =>
+    prev.map(item =>
+      item.id === id ? { ...item, text } : item,
+    ),
+  );
+};
   const toggleCheck = id => {
     setItems(prev =>
       prev.map(item =>

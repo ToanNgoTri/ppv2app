@@ -1,13 +1,14 @@
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import NoteScreen from '../screen/component/noteComponent';
-// import ScreenB from '../screen/component/noteB';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TopTab = createMaterialTopTabNavigator();
 
 
 export default function ExploreTopTab() {
   return (
+     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
     <TopTab.Navigator
       screenOptions={{
         tabBarIndicatorStyle: { backgroundColor: '#FF6B00' },
@@ -26,5 +27,6 @@ export default function ExploreTopTab() {
     initialParams={{ type: 'MT' }}
   />
     </TopTab.Navigator>
+     </SafeAreaView>
   );
 }
