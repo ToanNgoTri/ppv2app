@@ -1,5 +1,5 @@
 import SelectDropdown from 'react-native-select-dropdown';
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Text,
   TextInput,
@@ -11,11 +11,9 @@ import {
   Alert,
   PermissionsAndroid,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-// import RNFS from 'react-native-fs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 import { useNetInfo } from '@react-native-community/netinfo';
@@ -23,11 +21,8 @@ import { useNetInfo } from '@react-native-community/netinfo';
 import VoiceToText, {
   VoiceToTextEvents,
 } from '@appcitor/react-native-voice-to-text';
-export function Population() {
-  // const supabase = createClient('https://feuakoaglemujpwsspie.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZldWFrb2FnbGVtdWpwd3NzcGllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1Njg5NjYsImV4cCI6MjA3NTE0NDk2Nn0.kduWT_6GWnSyXKNCLPzGn1zcUaYO24Rtnx7fN9wtoO0', {
-  //   auth: { storage: AsyncStorage },
-  // });
 
+export function Population() {
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
   const [input3, setInput3] = useState('');
@@ -43,13 +38,13 @@ export function Population() {
   const [visibleFilters, setVisibleFilters] = useState(1);
 
   const [isListening, setIsListening] = useState(false);
-  // const [results, setResults] = useState([]);
+  const [resetKey, setResetKey] = useState(0);
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
-    const netInfo = useNetInfo();
-    let internetConnected = netInfo.isConnected;
-  
+  const netInfo = useNetInfo();
+  let internetConnected = netInfo.isConnected;
+
   useEffect(() => {
     async function getUser() {
       const { data: user } = await supabase.auth.getUser();
@@ -80,8 +75,7 @@ export function Population() {
       resultsListener.remove();
       startListener.remove();
       endListener.remove();
-            setIsListening(false)
-
+      setIsListening(false);
     };
   }, []);
 
@@ -117,7 +111,11 @@ export function Population() {
           );
         }}
         style={{
-          backgroundColor: isEven ? '#F8F9FA' : '#E9ECEF',
+          backgroundColor: item['VANGNHA']
+            ? '#ffcccc'
+            : isEven
+            ? '#F8F9FA'
+            : '#E9ECEF',
           marginVertical: 6,
           padding: 12,
           borderRadius: 12,
@@ -168,6 +166,9 @@ export function Population() {
           <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
           <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
+          <Text style={styles.infoText}>
+            VẮNG NHÀ: {item['VANGNHA'] ? 'CÓ' : 'KHÔNG'}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -179,7 +180,7 @@ export function Population() {
     setLoading(true);
     let query = supabase.from('population').select('*');
     if (input1 !== '') {
-      titleFilter1 !== 'GIOITINH'
+      !['GIOITINH', 'VANGNHA'].includes(titleFilter1)
         ? titleFilter1 == 'NAMSINH'
           ? (query = query.ilike(
               titleFilter1,
@@ -192,10 +193,13 @@ export function Population() {
                 : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter1, `%${input1}%`))
-        : (query = query.eq(titleFilter1, input1 === 'NAM' ? true : false));
+        : (query = query.eq(
+            titleFilter1,
+            titleFilter1 === 'GIOITINH' ? input1 === 'NAM' : input1 === 'CO',
+          ));
     }
     if (input2 !== '') {
-      titleFilter2 !== 'GIOITINH'
+        !['GIOITINH','VANGNHA'].includes(titleFilter2)
         ? titleFilter2 == 'NAMSINH'
           ? (query = query.ilike(
               titleFilter2,
@@ -232,24 +236,7 @@ export function Population() {
     console.log('data', data);
     console.log('error', error);
 
-    // console.log('filters', filters);
-
     setSearchResult(data || []);
-
-    // let dataDemoSearch = [];
-    // if (data) {
-    //   for (let a = 0; a <= data.length; a++) {
-    //     if (
-    //       data[a] &&
-    //       data[a][titleFilter1].match(new RegExp(input1, 'img')) &&
-    //       data[a][titleFilter2].match(new RegExp(input2, 'img')) &&
-    //       data[a][titleFilter3].match(new RegExp(input3, 'img'))
-    //     ) {
-    //       dataDemoSearch.push(data[a]);
-    //     }
-    //   }
-    //   setSearchResult(dataDemoSearch);
-    // }
 
     setLoading(false);
   }
@@ -266,6 +253,7 @@ export function Population() {
     'NOITHTRU',
     'TENCHA',
     'TENME',
+    'VANGNHA',
   ];
 
   async function requestMicrophonePermission() {
@@ -305,8 +293,7 @@ export function Population() {
 
   return (
     <>
-
-          {!internetConnected && (
+      {!internetConnected && (
         <View
           style={{
             position: 'absolute',
@@ -319,13 +306,15 @@ export function Population() {
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: 10,
-          }}>
+          }}
+        >
           <Text
             style={{
               color: 'white',
               marginBottom: 15,
               fontWeight: 'bold',
-            }}>
+            }}
+          >
             Vui lòng kiểm tra kết nối mạng ...
           </Text>
           <ActivityIndicator size="large" color="white"></ActivityIndicator>
@@ -391,6 +380,7 @@ export function Population() {
                 }}
               >
                 <SelectDropdown
+                  key={resetKey + num}
                   data={title}
                   onSelect={selectedItem => {
                     if (num === 1) setTitleFilter1(selectedItem);
@@ -465,7 +455,9 @@ export function Population() {
                     autoCapitalize={CapitalBool}
                     keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
                     placeholder={
-                      currentTitle !== 'NAMSINH'
+                      currentTitle === 'VANGNHA'
+                        ? 'Nhập CO hoặc KHONG'
+                        : currentTitle !== 'NAMSINH'
                         ? 'Nhập từ khóa...'
                         : "Dùng . , - hoặc viết liền để thay '/'"
                     }
@@ -526,6 +518,7 @@ export function Population() {
               setTitleFilter1('HOTEN');
               setTitleFilter2('HOTEN');
               setTitleFilter3('HOTEN');
+              setResetKey(prev => prev + 1);
             }}
           >
             <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>

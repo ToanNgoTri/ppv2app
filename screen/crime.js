@@ -8,7 +8,7 @@ import {
   FlatList,
   Keyboard,
   StyleSheet,
-ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 // import crime from '../asset/crime.json';
 import { useNetInfo } from '@react-native-community/netinfo';
@@ -31,8 +31,10 @@ export function Crime() {
 
   const [searchResutl, setSearchResult] = useState([]);
 
-    const netInfo = useNetInfo();
-    let internetConnected = netInfo.isConnected;
+  const [resetDropdownKey, setResetDropdownKey] = useState(0);
+
+  const netInfo = useNetInfo();
+  let internetConnected = netInfo.isConnected;
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
@@ -130,37 +132,36 @@ export function Crime() {
       .eq('CCCD', receive.CCCD); // điều kiện cập nhật
   };
 
-
   return (
     <View style={{ flex: 1 }}>
+      {!internetConnected && (
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            opacity: 0.7,
+            backgroundColor: 'black',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10,
+          }}
+        >
+          <Text
+            style={{
+              color: 'white',
+              marginBottom: 15,
+              fontWeight: 'bold',
+            }}
+          >
+            Vui lòng kiểm tra kết nối mạng ...
+          </Text>
+          <ActivityIndicator size="large" color="white"></ActivityIndicator>
+        </View>
+      )}
 
-              {!internetConnected && (
-            <View
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                opacity: 0.7,
-                backgroundColor: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-                zIndex: 10,
-              }}>
-              <Text
-                style={{
-                  color: 'white',
-                  marginBottom: 15,
-                  fontWeight: 'bold',
-                }}>
-                Vui lòng kiểm tra kết nối mạng ...
-              </Text>
-              <ActivityIndicator size="large" color="white"></ActivityIndicator>
-            </View>
-          )}
-    
-    
       <View
         style={{
           alignItems: 'center',
@@ -242,6 +243,7 @@ export function Crime() {
                   }}
                 >
                   <SelectDropdown
+                    key={resetDropdownKey + num}
                     data={title}
                     onSelect={(selectedItem, index) => {
                       if (num === 1) setTitleFilter1(selectedItem);
@@ -342,7 +344,6 @@ export function Crime() {
                     keyboardType={keyboardType} // ✅ auto đổi
                     onSubmitEditing={() => pushToSearch()}
                   />
-
                 </View>
               </View>
             );
@@ -446,6 +447,7 @@ export function Crime() {
                   setTitleFilter1('HOTEN');
                   setTitleFilter2('HOTEN');
                   setTitleFilter3('HOTEN');
+                  setResetDropdownKey(prev => prev + 1);
                 }}
                 style={{
                   backgroundColor: '#dc3545',
