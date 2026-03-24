@@ -2,8 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View, Animated } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+// import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Population } from '../screen/population';
 import { Crime } from '../screen/crime';
@@ -21,13 +20,13 @@ const Stack = createNativeStackNavigator();
 // Custom Bottom Tab Bar
 // ================================
 function CustomTabBar({ navigation, state }) {
-  const insets = useSafeAreaInsets();
+  // const insets = useSafeAreaInsets();
 
   const tabs = [
     { name: 'Tìm công dân', ref: 'SearchPopulationRef' },
     { name: 'Tìm đối tượng', ref: 'SearchCrimeRef' },
     { name: 'Bản đồ' },
-      { name: 'Ghi chú' },
+    { name: 'Ghi chú' },
     // { name: 'Thêm đối tượng', ref: 'SearchCrimeRef' },
   ];
 
@@ -38,8 +37,8 @@ function CustomTabBar({ navigation, state }) {
         backgroundColor: '#111',
         borderTopWidth: 1,
         borderTopColor: '#2c2c2c',
-        height: 58 + insets.bottom / 3,
-        paddingBottom: insets.bottom / 3,
+        height: 58,
+        paddingBottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
       }}
@@ -81,7 +80,7 @@ function CustomTabBar({ navigation, state }) {
           elevation: 6,
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 26 ,top:-4+insets.bottom/9}}>📷</Text>
+        <Text style={{ color: '#fff', fontSize: 26, top: -4 }}>📷</Text>
       </TouchableOpacity>
 
       {/* Tab 3 */}
@@ -135,7 +134,7 @@ const TabItem = ({ tab, index, state, navigation, totalTabs }) => {
           fontSize: isActive ? 15 : 13,
           fontWeight: isActive ? 'bold' : '500',
           textAlign: 'center',
-          top:isActive?-5:0,
+          top: isActive ? -5 : 0,
           // backgroundColor:'red'
         }}
       >
@@ -167,14 +166,14 @@ export function AppNavigators() {
         headerShown: false,
         tabBarStyle: { display: 'none' },
       }}
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen name="Tìm công dân" component={Population} />
       <Tab.Screen name="Tìm đối tượng" component={Crime} />
       <Tab.Screen name="Bản đồ" component={MapScreen} />
       <Tab.Screen name="Ghi chú" component={ExploreTopTab} />
 
-        {/* <Tab.Screen name="Thêm đối tượng" component={AddCrime} /> */}
+      {/* <Tab.Screen name="Thêm đối tượng" component={AddCrime} /> */}
     </Tab.Navigator>
   );
 }
@@ -188,47 +187,39 @@ const StackNavigator = () => {
       screenOptions={{
         headerStyle: { backgroundColor: '#007b55' },
         headerTintColor: 'white',
-        headerShadowVisible: false,
+        // headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
-
+      <Stack.Screen
+        name="Login"
+        component={Login}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="HomeStack"
         component={AppNavigators}
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="Camera"
         component={CameraComponent}
         options={{ headerShown: false }}
       />
-
-            <Stack.Screen
+      <Stack.Screen
         name="addCrime"
         component={AddCrime}
         options={{ headerShown: false }}
       />
-
-
       <Stack.Screen
         name="getOneFamily"
         component={GetOneFamily}
-        options={({ navigation }) => ({
+        options={{
           headerTitleAlign: 'center',
           animation: 'simple_push',
-          headerTitle: () => (
-            <Text style={{ fontWeight: 'bold', fontSize: 20, color: 'white' }}>
-              Thông tin hộ
-            </Text>
-          ),
-          headerLeft: () => (
-            <TouchableOpacity onPressIn={() => navigation.goBack()}>
-              <Text style={{ color: 'white', fontSize: 16 }}>← Quay lại</Text>
-            </TouchableOpacity>
-          ),
-        })}
+          headerTitle: 'Thông tin hộ',
+          headerBackTitle: 'Quay lại', // iOS
+          headerTintColor: 'white',
+        }}
       />
     </Stack.Navigator>
   );

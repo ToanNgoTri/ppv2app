@@ -6,17 +6,18 @@
  */
 
 import React from 'react';
-import {
-  Text,
-} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import StackNavigator from './navigators/AppNavigators'
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 function App() {
   
   
   return (
 <NavigationContainer>
+   <SafeAreaView  style={{ flex: 1 }} edges={['bottom']}>
 <StackNavigator/>
+</SafeAreaView>
 </NavigationContainer>
 );
 }

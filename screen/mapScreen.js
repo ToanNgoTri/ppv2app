@@ -100,7 +100,7 @@ export function MapScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={{ ...styles.container, marginTop: insets.top }}>
+    <SafeAreaView style={{ ...styles.container }}>
       <StatusBar
         translucent // 🔹 cho phép nội dung nằm dưới status bar
         // backgroundColor="#1E1E1E" // 🔹 trong suốt
