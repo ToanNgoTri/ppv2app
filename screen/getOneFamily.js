@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef,useCallback } from 'react';
+import { useState, useEffect,useCallback } from 'react';
 import {
   Text,
   View,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
-  Alert,
   BackHandler
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';

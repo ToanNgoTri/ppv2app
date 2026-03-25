@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LeafletView, MapMarker } from 'react-native-leaflet-view';
+import { LeafletView } from 'react-native-leaflet-view';
 import { supabase } from './lib.js';
 import { Item } from './component/itemCrime.js';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

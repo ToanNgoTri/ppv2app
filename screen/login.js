@@ -1,16 +1,14 @@
 // App.js
 import 'react-native-url-polyfill/auto';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TouchableOpacity,
   Text,
   TextInput,
-  Pressable,
   Alert,
   ActivityIndicator,
   StyleSheet,
   Keyboard,
-  View,
   ImageBackground,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';

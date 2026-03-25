@@ -1,4 +1,3 @@
-import React from 'react';
 import { Text, TouchableOpacity, View, Animated } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
