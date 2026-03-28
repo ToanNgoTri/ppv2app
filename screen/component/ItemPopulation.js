@@ -145,7 +145,7 @@ function ItemPopulation({ item, index }) {
         <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
         <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
         <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
-        <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
+        <Text style={styles.infoText}>Vắng nhà: {item['VANGNHA'] ? 'Có' : 'Không'}</Text>
       </View>
         <View style={{ marginTop: 10 }}>
           <TextInput
