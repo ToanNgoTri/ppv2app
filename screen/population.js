@@ -166,8 +166,9 @@ export function Population() {
           <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
           <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
+          <Text style={styles.infoText}>Nơi ở hiện tại: {item['NOIOHIENTAI']}</Text>
           <Text style={styles.infoText}>
-            VẮNG NHÀ: {item['VANGNHA'] ? 'CÓ' : 'KHÔNG'}
+            VẮNG NHÀ: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -195,7 +196,7 @@ export function Population() {
           : (query = query.ilike(titleFilter1, `%${input1}%`))
         : (query = query.eq(
             titleFilter1,
-            titleFilter1 === 'GIOITINH' ? input1 === 'NAM' : input1 === 'CO',
+            titleFilter1 === 'GIOITINH' ? input1 === 'NAM' : input1 === 'VẮNG',
           ));
     }
     if (input2 !== '') {
@@ -212,10 +213,13 @@ export function Population() {
                 : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter2, `%${input2}%`))
-        : (query = query.eq(titleFilter2, input2 === 'NAM' ? true : false));
+        : (query = query.eq(
+            titleFilter2,
+            titleFilter2 === 'GIOITINH' ? input2 === 'NAM' : input2 === 'VẮNG',
+          ));
     }
     if (input3 !== '') {
-      titleFilter3 !== 'GIOITINH'
+      !['GIOITINH','VANGNHA'].includes(titleFilter3)
         ? titleFilter3 == 'NAMSINH'
           ? (query = query.ilike(
               titleFilter3,
@@ -228,7 +232,10 @@ export function Population() {
                 : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter3, `%${input3}%`))
-        : (query = query.eq(titleFilter3, input3 === 'NAM' ? true : false));
+        : (query = query.eq(
+            titleFilter3,
+            titleFilter3 === 'GIOITINH' ? input3 === 'NAM' : input3  === 'VẮNG',
+          ));
     }
 
     const { data, error } = await query;
@@ -456,7 +463,7 @@ export function Population() {
                     keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
                     placeholder={
                       currentTitle === 'VANGNHA'
-                        ? 'Nhập CO hoặc KHONG'
+                        ? 'Nhập VẮNG hoặc KHÔNG'
                         : currentTitle !== 'NAMSINH'
                         ? 'Nhập từ khóa...'
                         : "Dùng . , - hoặc viết liền để thay '/'"
