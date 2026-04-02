@@ -45,7 +45,7 @@ export function Crime() {
     setLoading(true);
     let query = supabase.from('crime').select('*');
     if (input1 !== '') {
-      titleFilter1 !== 'GIOITINH'
+      !['GIOITINH', 'VANGNHA'].includes(titleFilter1)
         ? titleFilter1 == 'NAMSINH' ||
           titleFilter1 == 'DAYARRES' ||
           titleFilter1 == 'FREEDAY'
@@ -60,10 +60,14 @@ export function Crime() {
                 : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter1, `%${input1}%`))
-        : (query = query.eq(titleFilter1, input1 === 'NAM' ? true : false));
+        : (query = query.eq(
+            titleFilter1,
+            titleFilter1 === 'GIOITINH' ? input1 === 'NAM' : input1 === 'VẮNG',
+          ));
+        
     }
     if (input2 !== '') {
-      titleFilter2 !== 'GIOITINH'
+      !['GIOITINH', 'VANGNHA'].includes(titleFilter2)
         ? titleFilter2 == 'NAMSINH' ||
           titleFilter2 == 'DAYARRES' ||
           titleFilter2 == 'FREEDAY'
@@ -78,10 +82,13 @@ export function Crime() {
                 : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter2, `%${input2}%`))
-        : (query = query.eq(titleFilter2, input2 === 'NAM' ? true : false));
+        : (query = query.eq(
+            titleFilter2,
+            titleFilter2 === 'GIOITINH' ? input2 === 'NAM' : input2 === 'VẮNG',
+          ));
     }
     if (input3 !== '') {
-      titleFilter3 !== 'GIOITINH'
+      !['GIOITINH', 'VANGNHA'].includes(titleFilter3)
         ? titleFilter3 == 'NAMSINH' ||
           titleFilter3 == 'DAYARRES' ||
           titleFilter3 == 'FREEDAY'
@@ -96,7 +103,10 @@ export function Crime() {
                 : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
             ))
           : (query = query.ilike(titleFilter3, `%${input3}%`))
-        : (query = query.eq(titleFilter3, input3 === 'NAM' ? true : false));
+        : (query = query.eq(
+            titleFilter3,
+            titleFilter3 === 'GIOITINH' ? input3 === 'NAM' : input3 === 'VẮNG',
+          ));
     }
 
     const { data, error } = await query;
@@ -123,6 +133,7 @@ export function Crime() {
     'DETENTION',
     'DAYARRES',
     'FREEDAY',
+    'VANGNHA',
   ];
 
   const receiveLocation = async receive => {
@@ -279,6 +290,7 @@ export function Crime() {
                             DAYARRES: 'NGÀY BẮT',
                             FREEDAY: 'NGÀY TỰ DO',
                             DETENTION: 'TRẠI GIAM',
+                            VANGNHA: 'VẮNG NHÀ',
                           }[currentTitle] || 'CHỌN MỤC') + ' ▼'}
                         </Text>
                       </View>
@@ -336,6 +348,8 @@ export function Crime() {
                       currentTitle == 'DAYARRES' ||
                       currentTitle == 'FREEDAY'
                         ? "Dùng . , - hoặc viết liền để thay '/'"
+                        :  currentTitle === 'VANGNHA'
+                        ? 'Nhập VẮNG hoặc KHÔNG'
                         : 'Nhập từ khóa...'
                     }
                     placeholderTextColor={'gray'}

@@ -21,6 +21,9 @@ export function Item({ item, index, location }) {
   const [showGhiChu, setShowGhiChu] = useState(false);
   /* ================= GHI CHÚ ================= */
   const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
+
+  const [vangNha, setVangNha] = useState(item?.VANGNHA || false);
+  
   const saveTimeout = useRef(null);
 
   const onChangeGhiChu = text => {
@@ -163,10 +166,25 @@ export function Item({ item, index, location }) {
     };
   };
 
+    const toggleVangNha = async () => {
+      const newValue = !vangNha;
+      setVangNha(newValue);
+  
+      const { error } = await supabase
+        .from('crime')
+        .update({ VANGNHA: newValue })
+        .eq('CCCD', item['CCCD']);
+  
+      if (error) console.log('Lỗi cập nhật VANGNHA:', error.message);
+    };
   
   /* ================= UI ================= */
   return (
-    <View style={styles.card}>
+    <View style={{...styles.card,        backgroundColor: vangNha
+          ? '#FFCDD2'
+          : 'white'
+          
+          }}>
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.name}>
@@ -191,7 +209,11 @@ export function Item({ item, index, location }) {
             {item['GIOITINH'] ? 'Vợ' : 'Chồng'}: {item['TENVO']}
           </Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
-
+          <TouchableOpacity
+                onPress={toggleVangNha}
+>
+        <Text style={{...styles.infoText,fontWeight:'bold'}}>Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}</Text>
+          </TouchableOpacity>
           {item['LOCATION'] ? (
             <TouchableOpacity
               onPress={() =>
