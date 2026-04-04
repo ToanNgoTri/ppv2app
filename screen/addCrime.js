@@ -137,7 +137,7 @@ export function AddCrime() {
 
       const { data, error } = await supabase.storage
         .from('imageCrime')
-        .upload(`\/newSubject\/${fileName}`, arrayBuffer, {
+        .upload(`\/subject\/${fileName}`, arrayBuffer, {
           contentType: 'image/jpg',
           upsert: false, // ghi đè nếu file đã tồn tại
         });
@@ -168,7 +168,7 @@ export function AddCrime() {
        dataPush = { ...dataPush, GIOITINH: dataPush.GIOITINH === 'Nam' ? true : false }
       let uploadIMG = await uploadImage();
 
-      const { data, error } = await supabase.from('addCrime').insert([dataPush]);
+      const { data, error } = await supabase.from('crime').insert([dataPush]);
 
       if (error) {
         console.log('Lỗi khi thêm:', error);

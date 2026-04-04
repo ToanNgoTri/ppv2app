@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native';
+import { View, Text, Linking } from 'react-native';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -6,7 +6,6 @@ import { Alert, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { supabase } from '../lib.js';
 
 function ItemPopulation({ item, index }) {
-
   const route = useRoute();
   const navigation = useNavigation();
 
@@ -52,6 +51,10 @@ function ItemPopulation({ item, index }) {
     if (error) console.log('Lỗi cập nhật VANGNHA:', error.message);
   };
 
+  const callPhone = phone => {
+    if (!phone) return;
+    Linking.openURL(`tel:${phone}`);
+  };
   return (
     <TouchableOpacity
       style={{
@@ -73,28 +76,27 @@ function ItemPopulation({ item, index }) {
         shadowRadius: 3,
         elevation: 2,
       }}
-
-      onPress={toggleVangNha}
-
       onLongPress={() => {
-        Alert.alert(
-          'Thông báo',
-          'Bạn có muốn thêm thông tin công dân vào danh sách đối tượng?',
-          [
-            {
-              text: 'Thoát',
-              style: 'cancel',
+        Alert.alert('Thông báo', 'Bạn có muốn cập nhật thông tin công dân?', [
+          {
+            text: 'Thoát',
+            style: 'cancel',
+          },
+          {
+            text: 'Thêm đối tượng',
+            onPress: () => {
+              navigation.push('addCrime', {
+                data: item,
+              });
             },
-            {
-              text: 'Thêm',
-              onPress: () => {
-                navigation.push('addCrime', {
-                  data: item,
-                });
-              },
+          },
+          {
+            text: 'Vắng nhà',
+            onPress: () => {
+              toggleVangNha();
             },
-          ],
-        );
+          },
+        ]);
       }}
     >
       {/* Dòng trên cùng: STT + Quan hệ */}
@@ -145,28 +147,45 @@ function ItemPopulation({ item, index }) {
         <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
         <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
         <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
-        <Text style={styles.infoText}>Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}</Text>
-        <Text style={styles.infoText}>Nơi ở hiện tại: {item['NOIOHIENTAI']}</Text>
-      </View>
-        <View style={{ marginTop: 10 }}>
-          <TextInput
-            allowFontScaling={false}  
-            value={ghiChu}
-            onChangeText={onChangeGhiChu}
-            placeholder="Nhập ghi chú..."
-            multiline
+        <Text style={styles.infoText}>
+          Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
+        </Text>
+        <Text style={styles.infoText}>
+          Nơi ở hiện tại: {item['NOIOHIENTAI']}
+        </Text>
+        {item['SDT'] && (
+          <Text
             style={{
-            //   minHeight: 30,
-              borderWidth: 1,
-              borderColor: '#CED4DA',
-              borderRadius: 8,
-              padding: 10,
-              fontSize: 13,
-              backgroundColor: '#F8F9FA',
-              textAlignVertical: 'top',
+              ...styles.infoText,
+              fontWeight: '600',
+              color: '#007AFF', // nhìn giống link
+              textDecorationLine: 'underline',
             }}
-          />
-        </View>
+            onPress={() => callPhone(item['SDT'])}
+          >
+            SĐT: {item['SDT']}
+          </Text>
+        )}
+      </View>
+      <View style={{ marginTop: 10 }}>
+        <TextInput
+          allowFontScaling={false}
+          value={ghiChu}
+          onChangeText={onChangeGhiChu}
+          placeholder="Nhập ghi chú..."
+          multiline
+          style={{
+            //   minHeight: 30,
+            borderWidth: 1,
+            borderColor: '#CED4DA',
+            borderRadius: 8,
+            padding: 10,
+            fontSize: 13,
+            backgroundColor: '#F8F9FA',
+            textAlignVertical: 'top',
+          }}
+        />
+      </View>
     </TouchableOpacity>
   );
 }

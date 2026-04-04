@@ -20,6 +20,7 @@ import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
 import { supabase } from '../lib.js';
 import { useNetInfo } from '@react-native-community/netinfo';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 export function CameraComponent() {
   const [qrValue, setQrValue] = useState(null);
@@ -48,8 +49,8 @@ export function CameraComponent() {
     },
   });
 
-    const netInfo = useNetInfo();
-    let internetConnected = netInfo.isConnected;
+  const netInfo = useNetInfo();
+  let internetConnected = netInfo.isConnected;
 
   useFocusEffect(
     useCallback(() => {
@@ -79,7 +80,7 @@ export function CameraComponent() {
         .select('SOHOK')
         .eq('CCCD', cc)
         .single();
-        // .single(); // chỉ lấy 1 dòng
+      // .single(); // chỉ lấy 1 dòng
 
       if (error) {
         console.log('Lỗi Supabase:', error.message);
@@ -91,14 +92,12 @@ export function CameraComponent() {
     async function handleQR() {
       if (!qrValue) return;
 
-      console.log('qrValue1',qrValue);
-      
+      console.log('qrValue1', qrValue);
+
       const { data, error } = await supabase
         .from('qrvalue')
         .update({ value: qrValue })
-        .eq('id', '12345678')
-
-      
+        .eq('id', '12345678');
 
       const parseCitizenData = str => {
         const parts = str.split('|');
@@ -211,80 +210,115 @@ export function CameraComponent() {
     );
   }
 
+  const pickImageFromGallery = async () => {
+    try {
+      console.log('a');
+      
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.8,
+        selectionLimit: 1,
+      });
+
+      if (result.didCancel) return;
+
+      if (result.errorCode) {
+        console.log('Lỗi chọn ảnh:', result.errorMessage);
+        return;
+      }
+
+      const uri = result.assets?.[0]?.uri;
+      if (uri) {
+        setPhoto(uri); // dùng lại preview luôn
+      }
+    } catch (error) {
+      console.log('Lỗi:', error);
+    }
+  };
+
   // ✅ Giao diện chính
   return (
     <View style={styles.container}>
-                        {!internetConnected ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    opacity: 0.7,
-                    backgroundColor: 'black',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 10,
-                  }}>
-                  <Text
-                    style={{
-                      color: 'white',
-                      marginBottom: 15,
-                      fontWeight: 'bold',
-                    }}>
-                    Vui lòng kiểm tra kết nối mạng ...
-                  </Text>
-                  <ActivityIndicator size="large" color="white"></ActivityIndicator>
-                </View>
-              ):(
-                <>
-                      {!photo ? (
+      {!internetConnected ? (
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            opacity: 0.7,
+            backgroundColor: 'black',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10,
+          }}
+        >
+          <Text
+            style={{
+              color: 'white',
+              marginBottom: 15,
+              fontWeight: 'bold',
+            }}
+          >
+            Vui lòng kiểm tra kết nối mạng ...
+          </Text>
+          <ActivityIndicator size="large" color="white"></ActivityIndicator>
+        </View>
+      ) : (
         <>
-          <Camera
-            ref={camera}
-            style={StyleSheet.absoluteFill}
-            device={device}
-            isActive={isCameraActive}
-            codeScanner={codeScanner}
-            photo={true}
-            video={false}
-            frameProcessorFps={5}
-            photoQualityBalance={'speed'}
+          {!photo ? (
+            <>
+              <Camera
+                ref={camera}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                isActive={isCameraActive}
+                codeScanner={codeScanner}
+                photo={true}
+                video={false}
+                frameProcessorFps={5}
+                photoQualityBalance={'speed'}
+                focusable={true}
+                enableZoomGesture
+                focusDepth={0.5}
+              />
+              {route.params && (
+                <View style={styles.bottomBar}>
+                  <TouchableOpacity
+                    style={styles.galleryButton}
+                    onPress={pickImageFromGallery}
+                  >
+                    <Text style={{ color: '#fff' }}>Thư viện</Text>
+                  </TouchableOpacity>
 
-              focusable={true}
-              enableZoomGesture
-  focusDepth={0.5}
-          />
-          {route.params && (
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={capturePhoto}
-            >
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Chụp</Text>
-            </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={capturePhoto}
+                  >
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                      Chụp
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={styles.preview}>
+              <Image source={{ uri: photo }} style={styles.imagePreview} />
+              <TouchableOpacity onPress={choseImage} style={styles.agreeButton}>
+                <Text style={{ color: '#fff' }}>Đồng ý</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setPhoto(null)}
+                style={styles.retryButton}
+              >
+                <Text style={{ color: '#fff' }}>Chụp lại</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </>
-      ) : (
-        <View style={styles.preview}>
-          <Image source={{ uri: photo }} style={styles.imagePreview} />
-          <TouchableOpacity onPress={choseImage} style={styles.agreeButton}>
-            <Text style={{ color: '#fff' }}>Đồng ý</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setPhoto(null)}
-            style={styles.retryButton}
-          >
-            <Text style={{ color: '#fff' }}>Chụp lại</Text>
-          </TouchableOpacity>
-        </View>
       )}
-
-                </>
-              )}
-        
-
     </View>
   );
 }
@@ -322,4 +356,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
   },
+  bottomBar: {
+  position: 'absolute',
+  bottom: 40,
+  width: '100%',
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  alignItems: 'center',
+},
+galleryButton: {
+  backgroundColor: '#333',
+  padding: 15,
+  borderRadius: 10,
+},
 });

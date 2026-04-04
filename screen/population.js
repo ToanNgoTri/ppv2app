@@ -90,26 +90,6 @@ export function Population() {
             CCCD: item['CCCD'],
           })
         }
-        onLongPress={() => {
-          Alert.alert(
-            'Thông báo',
-            'Bạn có muốn thêm thông tin công dân vào danh sách đối tượng?',
-            [
-              {
-                text: 'Thoát',
-                style: 'cancel',
-              },
-              {
-                text: 'Thêm',
-                onPress: () => {
-                  navigation.push('addCrime', {
-                    data: item,
-                  });
-                },
-              },
-            ],
-          );
-        }}
         style={{
           backgroundColor: item['VANGNHA']
             ? '#ffcccc'
@@ -247,6 +227,8 @@ export function Population() {
 
     setLoading(false);
   }
+
+  
 
   const title = [
     'HOTEN',
