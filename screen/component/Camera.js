@@ -213,7 +213,7 @@ export function CameraComponent() {
   const pickImageFromGallery = async () => {
     try {
       console.log('a');
-      
+
       const result = await launchImageLibrary({
         mediaType: 'photo',
         quality: 0.8,
@@ -285,21 +285,30 @@ export function CameraComponent() {
               />
               {route.params && (
                 <View style={styles.bottomBar}>
-                  <TouchableOpacity
-                    style={styles.galleryButton}
-                    onPress={pickImageFromGallery}
-                  >
-                    <Text style={{ color: '#fff' }}>Thư viện</Text>
-                  </TouchableOpacity>
+                  {/* LEFT */}
+                  <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                    <TouchableOpacity
+                      style={styles.galleryButton}
+                      onPress={pickImageFromGallery}
+                    >
+                      <Text style={{ color: '#fff' }}>Thư viện</Text>
+                    </TouchableOpacity>
+                  </View>
 
-                  <TouchableOpacity
-                    style={styles.captureButton}
-                    onPress={capturePhoto}
-                  >
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                      Chụp
-                    </Text>
-                  </TouchableOpacity>
+                  {/* CENTER */}
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <TouchableOpacity
+                      style={styles.captureButton}
+                      onPress={capturePhoto}
+                    >
+                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                        Chụp
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* RIGHT (để trống cho cân layout) */}
+                  <View style={{ flex: 1 }} />
                 </View>
               )}
             </>
@@ -333,12 +342,11 @@ const styles = StyleSheet.create({
   },
   text: { color: '#fff', marginTop: 10 },
   captureButton: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: 'red',
     padding: 20,
-    borderRadius: 100,
+    borderRadius: 50, // 👉 làm nút tròn kiểu camera
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   preview: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   imagePreview: { width: '90%', height: '70%', borderRadius: 10 },
@@ -357,17 +365,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   bottomBar: {
-  position: 'absolute',
-  bottom: 40,
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-around',
-  alignItems: 'center',
-},
-galleryButton: {
-  backgroundColor: '#333',
-  padding: 15,
-  borderRadius: 10,
-},
+    position: 'absolute',
+    bottom: 40,
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+  galleryButton: {
+    backgroundColor: '#888',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
 });

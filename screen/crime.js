@@ -9,6 +9,7 @@ import {
   Keyboard,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView
 } from 'react-native';
 // import crime from '../asset/crime.json';
 import { useNetInfo } from '@react-native-community/netinfo';
@@ -144,6 +145,10 @@ export function Crime() {
   };
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+    >
     <View style={{ flex: 1 }}>
       {!internetConnected && (
         <View
@@ -527,6 +532,7 @@ export function Crime() {
         )}
       </View>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 const styles = StyleSheet.create({
