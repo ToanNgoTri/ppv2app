@@ -9,13 +9,17 @@ import {
   Keyboard,
   StyleSheet,
   ActivityIndicator,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from 'react-native';
 // import crime from '../asset/crime.json';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 import { Item } from './component/itemCrime.js';
+import {
+  KeyboardAwareScrollView,
+  KeyboardAwareFlatList,
+} from 'react-native-keyboard-aware-scroll-view';
 
 export function Crime() {
   const [input1, setInput1] = useState('');
@@ -65,7 +69,6 @@ export function Crime() {
             titleFilter1,
             titleFilter1 === 'GIOITINH' ? input1 === 'NAM' : input1 === 'VẮNG',
           ));
-        
     }
     if (input2 !== '') {
       !['GIOITINH', 'VANGNHA'].includes(titleFilter2)
@@ -145,394 +148,405 @@ export function Crime() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-    >
-    <View style={{ flex: 1 }}>
-      {!internetConnected && (
-        <View
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            opacity: 0.7,
-            backgroundColor: 'black',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 10,
-          }}
-        >
-          <Text
-            style={{
-              color: 'white',
-              marginBottom: 15,
-              fontWeight: 'bold',
-            }}
-          >
-            Vui lòng kiểm tra kết nối mạng ...
-          </Text>
-          <ActivityIndicator size="large" color="white"></ActivityIndicator>
-        </View>
-      )}
-
-      <View
-        style={{
-          alignItems: 'center',
-          backgroundColor: '#aaaf07ff',
-          borderBottomWidth: 1,
-          borderBottomColor: '#ddd',
-          paddingTop: insets.top + 10,
-          paddingBottom: 5,
-          paddingHorizontal: 10,
-        }}
-      >
-        {/* Bộ lọc */}
-        <View
-          style={{
-            width: '100%',
-            backgroundColor: 'white',
-            borderRadius: 12,
-            padding: 10,
-            paddingBottom: 5,
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 3,
-            paddingTop: 0,
-          }}
-        >
-          {[1, 2, 3].slice(0, visibleFilters).map(num => {
-            // Lấy giá trị title hiện tại của từng dòng
-            const currentTitle =
-              num === 1
-                ? titleFilter1
-                : num === 2
-                ? titleFilter2
-                : titleFilter3;
-
-            console.log('currentTitle:', currentTitle);
-
-            // Quy định keyboardType tùy theo tiêu chí
-            const keyboardType = [
-              'NAMSINH',
-              'DAYARRES',
-              'FREEDAY',
-              'CCCD',
-            ].includes(currentTitle)
-              ? 'numeric'
-              : 'default';
-
-            const CapitalBool = [
-              'NAMSINH',
-              'DAYARRES',
-              'FREEDAY',
-              'CCCD',
-            ].includes(currentTitle)
-              ? 'none'
-              : 'characters';
-
-            // Lấy input và setter tương ứng
-            const currentInput =
-              num === 1 ? input1 : num === 2 ? input2 : input3;
-            const setCurrentInput =
-              num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
-
-            return (
-              <View
-                key={num}
-                style={{
-                  height: 40,
-                  flexDirection: 'row',
-                  marginBottom: 7,
-                  marginTop: num == 1 ? 7 : 0,
-                  // backgroundColor: 'red',
-                }}
-              >
-                <View
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingHorizontal: 5,
-                  }}
-                >
-                  <SelectDropdown
-                    key={resetDropdownKey + num}
-                    data={title}
-                    onSelect={(selectedItem, index) => {
-                      if (num === 1) setTitleFilter1(selectedItem);
-                      else if (num === 2) setTitleFilter2(selectedItem);
-                      else setTitleFilter3(selectedItem);
-                    }}
-                    renderButton={(selectedItem, isOpened) => (
-                      <View
-                        style={{
-                          backgroundColor: '#fafafa',
-                          borderRadius: 8,
-                          paddingVertical: 6,
-                          paddingHorizontal: 8,
-                          borderWidth: 1,
-                          borderColor: '#ccc',
-                        }}
-                      >
-                        <Text style={{ fontSize: 12, fontWeight: '600' }}>
-                          {({
-                            HOTEN: 'HỌ TÊN',
-                            TENKHAC: 'TÊN KHÁC',
-                            GIOITINH: 'GIỚI TÍNH',
-                            NAMSINH: 'NĂM SINH',
-                            TENCHA: 'TÊN CHA',
-                            TENME: 'TÊN MẸ',
-                            SOHOK: 'SỐ HSHK',
-                            DANTOC: 'DÂN TỘC',
-                            TONGIAO: 'TÔN GIÁO',
-                            CCCD: 'CCCD',
-                            NOITHTRU: 'ĐỊA CHỈ',
-                            CHARGE: 'TỘI DANH',
-                            JUDGMENT: 'HÌNH PHẠT',
-                            DAYARRES: 'NGÀY BẮT',
-                            FREEDAY: 'NGÀY TỰ DO',
-                            DETENTION: 'TRẠI GIAM',
-                            VANGNHA: 'VẮNG NHÀ',
-                          }[currentTitle] || 'CHỌN MỤC') + ' ▼'}
-                        </Text>
-                      </View>
-                    )}
-                    renderItem={(item, index, isSelected) => (
-                      <View
-                        style={{
-                          padding: 8,
-                          backgroundColor: isSelected ? '#D2D9DF' : 'white',
-                        }}
-                      >
-                        <Text style={{ fontSize: 13 }}>
-                          {item == 'CHARGE'
-                            ? 'TỘI DANH'
-                            : item == 'JUDGMENT'
-                            ? 'HÌNH PHẠT'
-                            : item == 'DAYARRES'
-                            ? 'NGÀY BẮT'
-                            : item == 'FREEDAY'
-                            ? 'NGÀY TỰ DO'
-                            : item == 'DETENTION'
-                            ? 'TRẠI GIAM'
-                            : item}
-                        </Text>
-                      </View>
-                    )}
-                    dropdownStyle={{ borderRadius: 10 }}
-                  />
-                </View>
-
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: '#f9f9f9',
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: '#ccc',
-                    paddingHorizontal: 10,
-                    height: 40,
-                    flex: 1,
-                    // marginLeft: 8,
-                  }}
-                >
-                  <TextInput
-                    style={{
-                      flex: 1,
-                      fontSize: 13,
-                      color: '#333',
-                    }}
-                    value={currentInput}
-                    onChangeText={setCurrentInput}
-                    placeholder={
-                      currentTitle == 'NAMSINH' ||
-                      currentTitle == 'DAYARRES' ||
-                      currentTitle == 'FREEDAY'
-                        ? "Dùng . , - hoặc viết liền để thay '/'"
-                        :  currentTitle === 'VANGNHA'
-                        ? 'Nhập VẮNG hoặc KHÔNG'
-                        : 'Nhập từ khóa...'
-                    }
-                    placeholderTextColor={'gray'}
-                    selectTextOnFocus={true}
-                    autoCapitalize={CapitalBool}
-                    keyboardType={keyboardType} // ✅ auto đổi
-                    onSubmitEditing={() => pushToSearch()}
-                  />
-                </View>
-              </View>
-            );
-          })}
-
-          {/* Hàng dưới cùng */}
+    <>
+      <View style={{ flex: 1 }}>
+        {!internetConnected && (
           <View
             style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginTop: 0,
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              opacity: 0.7,
+              backgroundColor: 'black',
+              justifyContent: 'center',
               alignItems: 'center',
+              zIndex: 10,
             }}
           >
+            <Text
+              style={{
+                color: 'white',
+                marginBottom: 15,
+                fontWeight: 'bold',
+              }}
+            >
+              Vui lòng kiểm tra kết nối mạng ...
+            </Text>
+            <ActivityIndicator size="large" color="white"></ActivityIndicator>
+          </View>
+        )}
+
+        <View
+          style={{
+            alignItems: 'center',
+            backgroundColor: '#aaaf07ff',
+            borderBottomWidth: 1,
+            borderBottomColor: '#ddd',
+            paddingTop: insets.top + 10,
+            paddingBottom: 5,
+            paddingHorizontal: 10,
+          }}
+        >
+          {/* Bộ lọc */}
+          <View
+            style={{
+              width: '100%',
+              backgroundColor: 'white',
+              borderRadius: 12,
+              padding: 10,
+              paddingBottom: 5,
+              shadowColor: '#000',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+              paddingTop: 0,
+            }}
+          >
+            {[1, 2, 3].slice(0, visibleFilters).map(num => {
+              // Lấy giá trị title hiện tại của từng dòng
+              const currentTitle =
+                num === 1
+                  ? titleFilter1
+                  : num === 2
+                  ? titleFilter2
+                  : titleFilter3;
+
+              console.log('currentTitle:', currentTitle);
+
+              // Quy định keyboardType tùy theo tiêu chí
+              const keyboardType = [
+                'NAMSINH',
+                'DAYARRES',
+                'FREEDAY',
+                'CCCD',
+              ].includes(currentTitle)
+                ? 'numeric'
+                : 'default';
+
+              const CapitalBool = [
+                'NAMSINH',
+                'DAYARRES',
+                'FREEDAY',
+                'CCCD',
+              ].includes(currentTitle)
+                ? 'none'
+                : 'characters';
+
+              // Lấy input và setter tương ứng
+              const currentInput =
+                num === 1 ? input1 : num === 2 ? input2 : input3;
+              const setCurrentInput =
+                num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
+
+              return (
+                <View
+                  key={num}
+                  style={{
+                    height: 40,
+                    flexDirection: 'row',
+                    marginBottom: 7,
+                    marginTop: num == 1 ? 7 : 0,
+                    // backgroundColor: 'red',
+                  }}
+                >
+                  <View
+                    style={{
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 5,
+                    }}
+                  >
+                    <SelectDropdown
+                      key={resetDropdownKey + num}
+                      data={title}
+                      onSelect={(selectedItem, index) => {
+                        if (num === 1) setTitleFilter1(selectedItem);
+                        else if (num === 2) setTitleFilter2(selectedItem);
+                        else setTitleFilter3(selectedItem);
+                      }}
+                      renderButton={(selectedItem, isOpened) => (
+                        <View
+                          style={{
+                            backgroundColor: '#fafafa',
+                            borderRadius: 8,
+                            paddingVertical: 6,
+                            paddingHorizontal: 8,
+                            borderWidth: 1,
+                            borderColor: '#ccc',
+                          }}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: '600' }}>
+                            {({
+                              HOTEN: 'HỌ TÊN',
+                              TENKHAC: 'TÊN KHÁC',
+                              GIOITINH: 'GIỚI TÍNH',
+                              NAMSINH: 'NĂM SINH',
+                              TENCHA: 'TÊN CHA',
+                              TENME: 'TÊN MẸ',
+                              SOHOK: 'SỐ HSHK',
+                              DANTOC: 'DÂN TỘC',
+                              TONGIAO: 'TÔN GIÁO',
+                              CCCD: 'CCCD',
+                              NOITHTRU: 'ĐỊA CHỈ',
+                              CHARGE: 'TỘI DANH',
+                              JUDGMENT: 'HÌNH PHẠT',
+                              DAYARRES: 'NGÀY BẮT',
+                              FREEDAY: 'NGÀY TỰ DO',
+                              DETENTION: 'TRẠI GIAM',
+                              VANGNHA: 'VẮNG NHÀ',
+                            }[currentTitle] || 'CHỌN MỤC') + ' ▼'}
+                          </Text>
+                        </View>
+                      )}
+                      renderItem={(item, index, isSelected) => (
+                        <View
+                          style={{
+                            padding: 8,
+                            backgroundColor: isSelected ? '#D2D9DF' : 'white',
+                          }}
+                        >
+                          <Text style={{ fontSize: 13 }}>
+                            {item == 'CHARGE'
+                              ? 'TỘI DANH'
+                              : item == 'JUDGMENT'
+                              ? 'HÌNH PHẠT'
+                              : item == 'DAYARRES'
+                              ? 'NGÀY BẮT'
+                              : item == 'FREEDAY'
+                              ? 'NGÀY TỰ DO'
+                              : item == 'DETENTION'
+                              ? 'TRẠI GIAM'
+                              : item}
+                          </Text>
+                        </View>
+                      )}
+                      dropdownStyle={{ borderRadius: 10 }}
+                    />
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: '#f9f9f9',
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: '#ccc',
+                      paddingHorizontal: 10,
+                      height: 40,
+                      flex: 1,
+                      // marginLeft: 8,
+                    }}
+                  >
+                    <TextInput
+                      style={{
+                        flex: 1,
+                        fontSize: 13,
+                        color: '#333',
+                      }}
+                      value={currentInput}
+                      onChangeText={setCurrentInput}
+                      placeholder={
+                        currentTitle == 'NAMSINH' ||
+                        currentTitle == 'DAYARRES' ||
+                        currentTitle == 'FREEDAY'
+                          ? "Dùng . , - hoặc viết liền để thay '/'"
+                          : currentTitle === 'VANGNHA'
+                          ? 'Nhập VẮNG hoặc KHÔNG'
+                          : 'Nhập từ khóa...'
+                      }
+                      placeholderTextColor={'gray'}
+                      selectTextOnFocus={true}
+                      autoCapitalize={CapitalBool}
+                      keyboardType={keyboardType} // ✅ auto đổi
+                      onSubmitEditing={() => pushToSearch()}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+
+            {/* Hàng dưới cùng */}
             <View
               style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                // marginRight: 10,
+                marginTop: 0,
                 alignItems: 'center',
               }}
             >
-              <View>
-                <Text
-                  style={{
-                    marginRight: 10,
-                    fontSize: 13,
-                    textAlign: 'center',
-                    textAlignVertical: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  Kết quả:{' '}
-                  <Text style={{ fontWeight: 'bold' }}>
-                    {searchResutl.length}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  // marginRight: 10,
+                  alignItems: 'center',
+                }}
+              >
+                <View>
+                  <Text
+                    style={{
+                      marginRight: 10,
+                      fontSize: 13,
+                      textAlign: 'center',
+                      textAlignVertical: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    Kết quả:{' '}
+                    <Text style={{ fontWeight: 'bold' }}>
+                      {searchResutl.length}
+                    </Text>
                   </Text>
-                </Text>
+                </View>
+                {visibleFilters < 3 ? (
+                  <TouchableOpacity
+                    onPress={() =>
+                      setVisibleFilters(prev => Math.min(prev + 1, 3))
+                    }
+                    style={{
+                      paddingHorizontal: 15,
+                      height: 35,
+                      borderRadius: 8,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: '#198754',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 13,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      + Thêm
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() =>
+                      setVisibleFilters(prev => Math.min(prev - 2))
+                    }
+                    style={{
+                      paddingHorizontal: 15,
+                      height: 35,
+                      borderRadius: 8,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: '#b79902ff',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 13,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Đóng
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
-              {visibleFilters < 3 ? (
+              <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
-                  onPress={() =>
-                    setVisibleFilters(prev => Math.min(prev + 1, 3))
-                  }
+                  onPress={() => pushToSearch()}
                   style={{
+                    backgroundColor: '#0d6efd',
                     paddingHorizontal: 15,
                     height: 35,
                     borderRadius: 8,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: '#198754',
                   }}
                 >
-                  <Text
-                    style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}
-                  >
-                    + Thêm
+                  <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                    Tìm kiếm
                   </Text>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => setVisibleFilters(prev => Math.min(prev - 2))}
-                  style={{
-                    paddingHorizontal: 15,
-                    height: 35,
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: '#b79902ff',
-                  }}
-                >
-                  <Text
-                    style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}
-                  >
-                    Đóng
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity
-                onPress={() => pushToSearch()}
-                style={{
-                  backgroundColor: '#0d6efd',
-                  paddingHorizontal: 15,
-                  height: 35,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                  Tìm kiếm
-                </Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => {
-                  setInput1('');
-                  setInput2('');
-                  setInput3('');
-                  setTitleFilter1('HOTEN');
-                  setTitleFilter2('HOTEN');
-                  setTitleFilter3('HOTEN');
-                  setResetDropdownKey(prev => prev + 1);
-                }}
-                style={{
-                  backgroundColor: '#dc3545',
-                  width: 35,
-                  height: 35,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: 'white', fontWeight: 'bold' }}>X</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setInput1('');
+                    setInput2('');
+                    setInput3('');
+                    setTitleFilter1('HOTEN');
+                    setTitleFilter2('HOTEN');
+                    setTitleFilter3('HOTEN');
+                    setResetDropdownKey(prev => prev + 1);
+                  }}
+                  style={{
+                    backgroundColor: '#dc3545',
+                    width: 35,
+                    height: 35,
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontWeight: 'bold' }}>X</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
-      </View>
-      {loading && (
-        <Text
+        {loading && (
+          <Text
+            style={{
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: 16,
+              backgroundColor: 'black',
+              color: 'white',
+              padding: 5,
+            }}
+          >
+            Đang tải ...
+          </Text>
+        )}
+        <View
           style={{
-            textAlign: 'center',
-            fontWeight: 'bold',
-            fontSize: 16,
-            backgroundColor: 'black',
-            color: 'white',
-            padding: 5,
+            paddingLeft: 20,
+            paddingRight: 20,
+            marginBottom: 110 + (visibleFilters - 1) * 47 + insets.top,
           }}
         >
-          Đang tải ...
-        </Text>
-      )}
-      <View
-        style={{
-          paddingLeft: 20,
-          paddingRight: 20,
-          marginBottom: 110 + (visibleFilters - 1) * 47 + insets.top,
-        }}
-      >
-        {searchResutl.length ? (
-          <FlatList
-            onScrollBeginDrag={() => Keyboard.dismiss()}
-            ref={ref => {
-              global.SearchCrimeRef = ref;
-            }}
-            data={searchResutl}
-            keyExtractor={item => item.CCCD}
-            renderItem={(item, index) => (
-              <Item
-                item={item.item}
-                index={item.index + 1}
-                location={receiveLocation}
-              />
-            )}
-          />
-        ) : (
-          <TouchableOpacity
-            style={{
-              height: '100%',
-              width: '100%',
-              // backgroundColor:'red'
-            }}
-            onPress={() => Keyboard.dismiss()}
-          ></TouchableOpacity>
-        )}
+          {searchResutl.length ? (
+            <KeyboardAwareFlatList
+              enableOnAndroid={true}
+              // extraHeight={200}
+                        extraScrollHeight={170}
+
+              // onScrollBeginDrag={() => Keyboard.dismiss()}
+              ref={ref => {
+                global.SearchCrimeRef = ref;
+              }}
+              data={searchResutl}
+              keyExtractor={item => item.CCCD}
+              renderItem={(item, index) => (
+                <Item
+                  item={item.item}
+                  index={item.index + 1}
+                  location={receiveLocation}
+                />
+              )}
+            />
+          ) : (
+            <TouchableOpacity
+              style={{
+                height: '100%',
+                width: '100%',
+                // backgroundColor:'red'
+              }}
+              onPress={() => Keyboard.dismiss()}
+            ></TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
-    </KeyboardAvoidingView>
+    </>
   );
 }
 const styles = StyleSheet.create({

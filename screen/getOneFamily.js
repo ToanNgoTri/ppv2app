@@ -1,10 +1,12 @@
-import { useState, useEffect,useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Text,
   View,
   FlatList,
   StyleSheet,
-  BackHandler
+  BackHandler,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,7 +14,10 @@ import { useNavigation } from '@react-navigation/native';
 // import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 import Item from './component/ItemPopulation.js';
-
+import {
+  KeyboardAwareScrollView,
+  KeyboardAwareFlatList,
+} from 'react-native-keyboard-aware-scroll-view';
 // import population from '../asset/population.json';
 
 export function GetOneFamily() {
@@ -22,7 +27,6 @@ export function GetOneFamily() {
 
   const navigation = useNavigation();
   // const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
-
 
   // let data = [];
 
@@ -46,57 +50,64 @@ export function GetOneFamily() {
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        route.params ? navigation.pop(2) : navigation.pop()
- 
-  return true;
-}
- const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      onBackPress
-    );        
-        
+        route.params ? navigation.pop(2) : navigation.pop();
 
+        return true;
+      };
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
 
- return () => subscription.remove();
-    }, [navigation])
+      return () => subscription.remove();
+    }, [navigation]),
   );
-
 
   return (
     <>
-      <View>
-        <View
+      <View
+        style={{
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'space-between',
+          flexDirection: 'row',
+          backgroundColor: '#33CC00',
+          paddingLeft: 20,
+          paddingRight: 20,
+          // paddingBottom: 30,
+          paddingTop: 5,
+          paddingBottom: 5,
+        }}
+      >
+        <Text
           style={{
-            justifyContent: 'space-between',
-            flexDirection: 'row',
-            backgroundColor: '#33CC00',
-            paddingLeft: 20,
-            paddingRight: 20,
-            paddingBottom: 10,
-            paddingTop: 10,
+            display: 'flex',
+            fontWeight: 'bold',
           }}
         >
-          <Text style={{ fontWeight: 'bold' }}>
-            Số HSHK {route.params.screen}
-          </Text>
-          <Text style={{ fontWeight: 'bold' }}>
-            Địa chỉ: {searchResult[0] && searchResult[0]['NOITHTRU']}
-          </Text>
-        </View>
-        <View
-          style={{
-            paddingLeft: 20,
-            paddingRight: 20,
-            marginBottom: 20,
-            paddingBottom: 60,
-            // marginTop: 10,
-          }}
-        >
-          <FlatList
-            data={searchResult}
-            renderItem={item => <Item item={item.item} index={item.index} />}
-          ></FlatList>
-        </View>
+          Số HSHK {route.params.screen}
+        </Text>
+        <Text style={{ fontWeight: 'bold' }}>
+          Địa chỉ: {searchResult[0] && searchResult[0]['NOITHTRU']}
+        </Text>
+      </View>
+      <View
+        style={{
+          flex: 1,
+          paddingLeft: 20,
+          paddingRight: 20,
+          // marginBottom: 20,
+          // paddingBottom: 10,
+        }}
+      >
+        <KeyboardAwareFlatList
+          enableOnAndroid={true}
+          extraHeight={100}
+          extraScrollHeight={100}
+          keyboardShouldPersistTaps="handled"
+          data={searchResult}
+          renderItem={({ item, index }) => <Item item={item} index={index} />}
+        />
       </View>
     </>
   );

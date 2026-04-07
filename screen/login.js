@@ -10,6 +10,8 @@ import {
   StyleSheet,
   Keyboard,
   ImageBackground,
+  KeyboardAvoidingView,
+  
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
@@ -97,6 +99,10 @@ export function Login() {
   }
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
     <TouchableOpacity
       style={{ flex: 1 }}
       activeOpacity={1}
@@ -150,6 +156,7 @@ export function Login() {
         </TouchableOpacity>
       </ImageBackground>
     </TouchableOpacity>
+    </KeyboardAvoidingView>
   );
 }
 
