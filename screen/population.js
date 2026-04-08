@@ -8,7 +8,7 @@ import {
   FlatList,
   Keyboard,
   StyleSheet,
-  Alert,
+  Linking,
   PermissionsAndroid,
   Image,
   ActivityIndicator,
@@ -146,10 +146,34 @@ export function Population() {
           <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
           <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
-          <Text style={styles.infoText}>Nơi ở hiện tại: {item['NOIOHIENTAI']}</Text>
+          <Text style={styles.infoText}>
+            Nơi ở hiện tại: {item['NOIOHIENTAI']}
+          </Text>
           <Text style={styles.infoText}>
             VẮNG NHÀ: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
           </Text>
+          {item['SDT'] && (
+            <Text
+              style={{
+                ...styles.infoText,
+                fontWeight: '600',
+                color: '#007AFF', // nhìn giống link
+                textDecorationLine: 'underline',
+              }}
+              onPress={() => callPhone(item['SDT'])}
+            >
+              SĐT: {item['SDT']}
+            </Text>
+          )}
+          {item['GHICHU'] && (
+            <Text
+              style={{
+                ...styles.infoText,
+              }}
+            >
+              Ghi chú: {item['GHICHU']}
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -180,7 +204,7 @@ export function Population() {
           ));
     }
     if (input2 !== '') {
-        !['GIOITINH','VANGNHA'].includes(titleFilter2)
+      !['GIOITINH', 'VANGNHA'].includes(titleFilter2)
         ? titleFilter2 == 'NAMSINH'
           ? (query = query.ilike(
               titleFilter2,
@@ -199,7 +223,7 @@ export function Population() {
           ));
     }
     if (input3 !== '') {
-      !['GIOITINH','VANGNHA'].includes(titleFilter3)
+      !['GIOITINH', 'VANGNHA'].includes(titleFilter3)
         ? titleFilter3 == 'NAMSINH'
           ? (query = query.ilike(
               titleFilter3,
@@ -214,7 +238,7 @@ export function Population() {
           : (query = query.ilike(titleFilter3, `%${input3}%`))
         : (query = query.eq(
             titleFilter3,
-            titleFilter3 === 'GIOITINH' ? input3 === 'NAM' : input3  === 'VẮNG',
+            titleFilter3 === 'GIOITINH' ? input3 === 'NAM' : input3 === 'VẮNG',
           ));
     }
 
@@ -227,8 +251,6 @@ export function Population() {
 
     setLoading(false);
   }
-
-  
 
   const title = [
     'HOTEN',
@@ -279,6 +301,12 @@ export function Population() {
       console.error(error);
     }
   };
+
+    const callPhone = phone => {
+      if (!phone) return;
+      Linking.openURL(`tel:${phone}`);
+    };
+  
 
   return (
     <>
