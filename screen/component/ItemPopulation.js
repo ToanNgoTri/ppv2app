@@ -11,7 +11,8 @@ function ItemPopulation({ item, index }) {
 
   const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
   const [vangNha, setVangNha] = useState(item?.VANGNHA || false);
-
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [phone, setPhone] = useState(item?.SDT || '');
   const saveTimeout = useRef(null);
 
   const isSelected = route?.params?.CCCD === item['CCCD'];
@@ -77,26 +78,48 @@ function ItemPopulation({ item, index }) {
         elevation: 2,
       }}
       onLongPress={() => {
-        Alert.alert('Thông báo', 'Bạn có muốn cập nhật thông tin công dân?', [
-          {
-            text: 'Thoát',
-            style: 'cancel',
-          },
-          {
-            text: 'Thêm đối tượng',
-            onPress: () => {
-              navigation.push('addCrime', {
-                data: item,
-              });
+        Alert.alert(
+          'Thông báo',
+          'Bạn có muốn cập nhật thông tin công dân?',
+          [
+            {
+              text: 'Thoát',
+              style: 'cancel',
             },
-          },
-          {
-            text: 'Vắng nhà',
-            onPress: () => {
-              toggleVangNha();
+            {
+              text: 'Thao tác',
+              onPress: () => {
+                Alert.alert(
+                  'Chọn chức năng',
+                  '',
+                  [
+                    {
+                      text: 'Thêm đối tượng',
+                      onPress: () => {
+                        navigation.push('addCrime', { data: item });
+                      },
+                    },
+                    {
+                      text: `${item['VANGNHA'] ? 'Bỏ' : 'Đánh dấu'} vắng nhà`,
+                      onPress: toggleVangNha,
+                    },
+                    {
+                      text: 'Cập nhật SĐT',
+                      onPress: () => {
+                        setPhone(item?.SDT || '');
+                        setIsEditingPhone(true);
+                      },
+                    },
+                  ],
+                  { cancelable: true },
+                  { cancelAnimationFrame: true },
+                );
+              },
             },
-          },
-        ]);
+          ],
+          { cancelable: true },
+          { cancelAnimationFrame: true },
+        );
       }}
     >
       {/* Dòng trên cùng: STT + Quan hệ */}
@@ -153,18 +176,71 @@ function ItemPopulation({ item, index }) {
         <Text style={styles.infoText}>
           Nơi ở hiện tại: {item['NOIOHIENTAI']}
         </Text>
-        {item['SDT'] && (
-          <Text
-            style={{
-              ...styles.infoText,
-              fontWeight: '600',
-              color: '#007AFF', // nhìn giống link
-              textDecorationLine: 'underline',
-            }}
-            onPress={() => callPhone(item['SDT'])}
-          >
-            SĐT: {item['SDT']}
-          </Text>
+        {isEditingPhone ? (
+          <View style={{ width: '100%', marginTop: 8 }}>
+            <TextInput
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="Nhập SĐT"
+              keyboardType="phone-pad"
+              style={{
+                borderWidth: 1,
+                borderColor: '#CED4DA',
+                borderRadius: 8,
+                padding: 8,
+                marginBottom: 6,
+              }}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#28A745',
+                  padding: 8,
+                  borderRadius: 6,
+                }}
+                onPress={async () => {
+                  const { error } = await supabase
+                    .from('population')
+                    .update({ SDT: phone })
+                    .eq('CCCD', item['CCCD']);
+
+                  if (error) {
+                    Alert.alert('Lỗi', error.message);
+                  } else {
+                    setIsEditingPhone(false);
+                  }
+                }}
+              >
+                <Text style={{ color: '#fff' }}>Lưu</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#6C757D',
+                  padding: 8,
+                  borderRadius: 6,
+                }}
+                onPress={() => setIsEditingPhone(false)}
+              >
+                <Text style={{ color: '#fff' }}>Huỷ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          item['SDT'] && (
+            <Text
+              style={{
+                ...styles.infoText,
+                fontWeight: '600',
+                color: '#007AFF',
+                textDecorationLine: 'underline',
+              }}
+              onPress={() => callPhone(item['SDT'])}
+            >
+              SĐT: {item['SDT']}
+            </Text>
+          )
         )}
       </View>
       <View style={{ marginTop: 10 }}>
