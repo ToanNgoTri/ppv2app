@@ -178,79 +178,62 @@ export function Population() {
       </TouchableOpacity>
     );
   }
-  async function pushToSearch() {
-    global.SearchPopulationRef &&
-      global.SearchPopulationRef.scrollToOffset({ offset: 0 });
-    Keyboard.dismiss();
-    setLoading(true);
-    let query = supabase.from('population').select('*');
-    if (input1 !== '') {
-      !['GIOITINH', 'VANGNHA'].includes(titleFilter1)
-        ? titleFilter1 == 'NAMSINH'
-          ? (query = query.ilike(
-              titleFilter1,
-              input1.match(/\.|,|-/gim)
-                ? `%${input1.replace(/\.|,|-/gim, '/')}%`
-                : input1.length <= 4
-                ? `%${input1}%`
-                : input1.length < 8
-                ? `%${input1.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
-                : `%${input1.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
-            ))
-          : (query = query.ilike(titleFilter1, `%${input1}%`))
-        : (query = query.eq(
-            titleFilter1,
-            titleFilter1 === 'GIOITINH' ? input1 === 'NAM' : input1 === 'VẮNG',
-          ));
-    }
-    if (input2 !== '') {
-      !['GIOITINH', 'VANGNHA'].includes(titleFilter2)
-        ? titleFilter2 == 'NAMSINH'
-          ? (query = query.ilike(
-              titleFilter2,
-              input2.match(/\.|,|-/gim)
-                ? `%${input2.replace(/\.|,|-/gim, '/')}%`
-                : input2.length <= 4
-                ? `%${input2}%`
-                : input2.length < 8
-                ? `%${input2.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
-                : `%${input2.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
-            ))
-          : (query = query.ilike(titleFilter2, `%${input2}%`))
-        : (query = query.eq(
-            titleFilter2,
-            titleFilter2 === 'GIOITINH' ? input2 === 'NAM' : input2 === 'VẮNG',
-          ));
-    }
-    if (input3 !== '') {
-      !['GIOITINH', 'VANGNHA'].includes(titleFilter3)
-        ? titleFilter3 == 'NAMSINH'
-          ? (query = query.ilike(
-              titleFilter3,
-              input3.match(/\.|,|-/gim)
-                ? `%${input3.replace(/\.|,|-/gim, '/')}%`
-                : input3.length <= 4
-                ? `%${input3}%`
-                : input3.length < 8
-                ? `%${input3.replace(/^(\d{2})(\d{4})$/, '$1/$2')}%`
-                : `%${input3.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3')}%`,
-            ))
-          : (query = query.ilike(titleFilter3, `%${input3}%`))
-        : (query = query.eq(
-            titleFilter3,
-            titleFilter3 === 'GIOITINH' ? input3 === 'NAM' : input3 === 'VẮNG',
-          ));
+async function pushToSearch() {
+  global.SearchPopulationRef &&
+    global.SearchPopulationRef.scrollToOffset({ offset: 0 });
+
+  Keyboard.dismiss();
+  setLoading(true);
+
+  let query = supabase.from("population").select("*");
+
+  // 👉 Hàm xử lý từng filter
+  const applyFilter = (query, field, value) => {
+    if (!value) return query;
+
+    // ✅ SOHOK → exact
+    if (field === "SOHOK") {
+      return query.eq(field, value);
     }
 
-    const { data, error } = await query;
+    // ✅ Boolean fields
+    if (["GIOITINH", "VANGNHA"].includes(field)) {
+      return query.eq(
+        field,
+        field === "GIOITINH" ? value === "NAM" : value === "VẮNG"
+      );
+    }
 
-    console.log('data', data);
-    console.log('error', error);
+    // ✅ Năm sinh → format + fuzzy
+    if (field === "NAMSINH") {
+      const formatted = value.match(/\.|,|-/gim)
+        ? value.replace(/\.|,|-/gim, "/")
+        : value.length <= 4
+        ? value
+        : value.length < 8
+        ? value.replace(/^(\d{2})(\d{4})$/, "$1/$2")
+        : value.replace(/^(\d{2})(\d{2})(\d{4})$/, "$1/$2/$3");
 
-    setSearchResult(data || []);
+      return query.ilike(field, `%${formatted}%`);
+    }
 
-    setLoading(false);
-  }
+    // ✅ Default → fuzzy
+    return query.ilike(field, `%${value}%`);
+  };
+
+  // 👉 Áp dụng 3 input
+  query = applyFilter(query, titleFilter1, input1);
+  query = applyFilter(query, titleFilter2, input2);
+  query = applyFilter(query, titleFilter3, input3);
+
+  const { data, error } = await query;
+
+  console.log("data", data);
+  console.log("error", error);
+
+  setSearchResult(data || []);
+  setLoading(false);
+}
 
   const title = [
     'HOTEN',
