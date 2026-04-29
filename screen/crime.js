@@ -44,8 +44,9 @@ export function Crime() {
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
   async function pushToSearch() {
-    global.SearchCrimeRef &&
-      global.SearchCrimeRef.scrollToOffset({ offset: 0 });
+    global.SearchCrimeRef &&  global.SearchCrimeRef.scrollToPosition(0, 0);
+    console.log('search');
+    
     Keyboard.dismiss();
     setLoading(true);
     let query = supabase.from('crime').select('*');
