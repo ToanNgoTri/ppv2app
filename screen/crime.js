@@ -139,6 +139,7 @@ export function Crime() {
     'DAYARRES',
     'FREEDAY',
     'VANGNHA',
+    'GHICHU',
   ];
 
   const receiveLocation = async receive => {

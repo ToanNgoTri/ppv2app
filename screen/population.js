@@ -248,6 +248,7 @@ async function pushToSearch() {
     'TENCHA',
     'TENME',
     'VANGNHA',
+    'GHICHU',
   ];
 
   async function requestMicrophonePermission() {
