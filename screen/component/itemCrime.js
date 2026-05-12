@@ -23,7 +23,7 @@ export function Item({ item, index, location }) {
   const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
 
   const [vangNha, setVangNha] = useState(item?.VANGNHA || false);
-  
+
   const saveTimeout = useRef(null);
 
   const onChangeGhiChu = text => {
@@ -114,7 +114,7 @@ export function Item({ item, index, location }) {
     Alert.alert(error ? 'Cập nhật thất bại' : 'Đã xoá vị trí');
   }
 
-    const pushToSetLocation = async () => {
+  const pushToSetLocation = async () => {
     const toado = await extractLatLngFromGoogleMapsUrl(LocationGG);
     // console.log('toado', toado);
 
@@ -134,7 +134,7 @@ export function Item({ item, index, location }) {
     Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
   };
 
-    const extractLatLngFromGoogleMapsUrl = async url => {
+  const extractLatLngFromGoogleMapsUrl = async url => {
     let result = await getCoordsFromShortLink(url);
     console.log('result1', result);
 
@@ -145,8 +145,8 @@ export function Item({ item, index, location }) {
     if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
     return result.location;
   };
-  
-    const getCoordsFromShortLink = async shortUrl => {
+
+  const getCoordsFromShortLink = async shortUrl => {
     console.log('getCoordsFromShortLink');
 
     const response = await fetch(shortUrl, { redirect: 'follow' });
@@ -166,25 +166,23 @@ export function Item({ item, index, location }) {
     };
   };
 
-    const toggleVangNha = async () => {
-      const newValue = !vangNha;
-      setVangNha(newValue);
-  
-      const { error } = await supabase
-        .from('crime')
-        .update({ VANGNHA: newValue })
-        .eq('CCCD', item['CCCD']);
-  
-      if (error) console.log('Lỗi cập nhật VANGNHA:', error.message);
-    };
-  
+  const toggleVangNha = async () => {
+    const newValue = !vangNha;
+    setVangNha(newValue);
+
+    const { error } = await supabase
+      .from('crime')
+      .update({ VANGNHA: newValue })
+      .eq('CCCD', item['CCCD']);
+
+    if (error) console.log('Lỗi cập nhật VANGNHA:', error.message);
+  };
+
   /* ================= UI ================= */
   return (
-    <View style={{...styles.card,        backgroundColor: vangNha
-          ? '#FFCDD2'
-          : 'white'
-          
-          }}>
+    <View
+      style={{ ...styles.card, backgroundColor: vangNha ? '#FFCDD2' : 'white' }}
+    >
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.name}>
@@ -209,10 +207,10 @@ export function Item({ item, index, location }) {
             {item['GIOITINH'] ? 'Vợ' : 'Chồng'}: {item['TENVO']}
           </Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
-          <TouchableOpacity
-                onPress={toggleVangNha}
->
-        <Text style={{...styles.infoText,fontWeight:'bold'}}>Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}</Text>
+          <TouchableOpacity onPress={toggleVangNha}>
+            <Text style={{ ...styles.infoText, fontWeight: 'bold' }}>
+              Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
+            </Text>
           </TouchableOpacity>
           {item['LOCATION'] ? (
             <TouchableOpacity
@@ -265,19 +263,16 @@ export function Item({ item, index, location }) {
         </View>
 
         <View style={{ flex: 1 }}>
-                  <TouchableOpacity
-          onPress={() => setShowGhiChu(prev => !prev)}
-        >
-
-          <Image
-            source={
-              imageExists
-                ? { uri: imageUrl }
-                : require('../../asset/unknow.jpg')
-            }
-            style={styles.image}
-          />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowGhiChu(prev => !prev)}>
+            <Image
+              source={
+                imageExists
+                  ? { uri: imageUrl }
+                  : require('../../asset/unknow.jpg')
+              }
+              style={styles.image}
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -308,26 +303,27 @@ export function Item({ item, index, location }) {
       </View>
 
       {/* GHI CHÚ */}
-        {showGhiChu && (
-          <View style={{ marginTop: 10 }}>
-            <TextInput
-              value={ghiChu}
-              onChangeText={onChangeGhiChu}
-              placeholder="Nhập ghi chú..."
-              multiline
-              style={{
-                minHeight: 90,
-                borderWidth: 1,
-                borderColor: '#CED4DA',
-                borderRadius: 8,
-                padding: 10,
-                fontSize: 13,
-                backgroundColor: '#F8F9FA',
-                textAlignVertical: 'top',
-              }}
-            />
-          </View>
-        )}
+      {showGhiChu && (
+        <View style={{ marginTop: 10 }}>
+          <TextInput
+            value={ghiChu}
+            onChangeText={onChangeGhiChu}
+            autoCapitalize={'characters'}
+            placeholder="Nhập ghi chú..."
+            multiline
+            style={{
+              minHeight: 90,
+              borderWidth: 1,
+              borderColor: '#CED4DA',
+              borderRadius: 8,
+              padding: 10,
+              fontSize: 13,
+              backgroundColor: '#F8F9FA',
+              textAlignVertical: 'top',
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }

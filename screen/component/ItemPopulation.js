@@ -247,6 +247,7 @@ function ItemPopulation({ item, index }) {
         <TextInput
           allowFontScaling={false}
           value={ghiChu}
+          autoCapitalize={'characters'}
           onChangeText={onChangeGhiChu}
           placeholder="Nhập ghi chú..."
           multiline
