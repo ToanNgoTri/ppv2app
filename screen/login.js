@@ -1,4 +1,4 @@
-// App.js
+// Login.js
 import 'react-native-url-polyfill/auto';
 import { useState, useEffect } from 'react';
 import {
@@ -11,12 +11,9 @@ import {
   Keyboard,
   ImageBackground,
   KeyboardAvoidingView,
-  
+  Platform,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
 import { useNavigation } from '@react-navigation/native';
-
 import { supabase } from './lib.js';
 
 export function Login() {
@@ -28,46 +25,42 @@ export function Login() {
 
   const navigation = useNavigation();
 
-  async function autoLogin() {
-   try {
-    const { data } = await supabase.auth.getSession();
-    setUser(data?.session?.user ?? null);
-  } catch (error) {
-    console.error('Auto login error:', error);
-  }
-  }
-
   useEffect(() => {
-    autoLogin();
-    // Theo dõi auth state
+    let isMounted = true;
+
+    // onAuthStateChange tự emit INITIAL_SESSION ngay khi mount
+    // → không cần gọi getSession() riêng nữa
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        // requestAnimationFrame đảm bảo navigator đã mount xong trước khi navigate
+        requestAnimationFrame(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'HomeStack' }],
+          });
+        });
+      }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      navigation.replace(`HomeStack`);
-    }
-  }, [user]);
 
   async function signIn() {
     try {
       setLoadingLogin(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       Alert.alert('Thông báo', 'Đăng nhập thành công');
     } catch (err) {
-      //   console.log(err);
-
       Alert.alert(
         'Lỗi đăng nhập',
-        err.message == 'Invalid login credentials'
+        err.message === 'Invalid login credentials'
           ? 'Thông tin đăng nhập không đúng'
           : err.message,
       );
@@ -83,11 +76,9 @@ export function Login() {
       if (error) throw error;
       Alert.alert('Thông báo', 'Kiểm tra email để xác nhận đăng ký');
     } catch (err) {
-      console.log(err.message);
-
       Alert.alert(
         'Lỗi đăng ký',
-        err.message == 'Password should be at least 6 characters.'
+        err.message === 'Password should be at least 6 characters.'
           ? 'Password phải có ít nhất 6 ký tự'
           : err.message,
       );
@@ -95,7 +86,6 @@ export function Login() {
       setLoadingSignup(false);
       setPassword('');
     }
-    // await AsyncStorage.clear();
   }
 
   return (
@@ -103,59 +93,63 @@ export function Login() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-    <TouchableOpacity
-      style={{ flex: 1 }}
-      activeOpacity={1}
-      onPress={() => Keyboard.dismiss()}
-    >
-      <ImageBackground
-        source={require('../asset/BG.jpg')} // 👈 ảnh nền trong thư mục assets
-        style={styles.container}
-        resizeMode="cover"
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        activeOpacity={1}
+        onPress={() => Keyboard.dismiss()}
       >
-        <Text style={styles.title}>Đăng nhập</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Nhập Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor={'gray'}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Nhập Mật khẩu"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          placeholderTextColor={'gray'}
-          textContentType=""
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={signIn}
-          disabled={loadingLogin || loadingSignup}
+        <ImageBackground
+          source={require('../asset/BG.jpg')}
+          style={styles.container}
+          resizeMode="cover"
         >
-          {loadingLogin ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Đăng nhập</Text>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, styles.secondary]}
-          onPress={signUp}
-          disabled={loadingLogin || loadingSignup}
-        >
-          {loadingSignup ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Đăng ký</Text>
-          )}
-        </TouchableOpacity>
-      </ImageBackground>
-    </TouchableOpacity>
+          <Text style={styles.title}>Đăng nhập</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            placeholderTextColor="gray"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập Mật khẩu"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            placeholderTextColor="gray"
+            textContentType="none"
+          />
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={signIn}
+            disabled={loadingLogin || loadingSignup}
+          >
+            {loadingLogin ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Đăng nhập</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.secondary]}
+            onPress={signUp}
+            disabled={loadingLogin || loadingSignup}
+          >
+            {loadingSignup ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Đăng ký</Text>
+            )}
+          </TouchableOpacity>
+        </ImageBackground>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
@@ -172,7 +166,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 20,
     textAlign: 'center',
-    color: '#ffffffff',
+    color: '#ffffff',
   },
   input: {
     borderWidth: 1,
