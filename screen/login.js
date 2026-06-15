@@ -1,6 +1,6 @@
 // Login.js
 import 'react-native-url-polyfill/auto';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -19,44 +19,26 @@ import { supabase } from './lib.js';
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useState(null);
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [loadingSignup, setLoadingSignup] = useState(false);
 
   const navigation = useNavigation();
 
-  useEffect(() => {
-    let isMounted = true;
-
-    // onAuthStateChange tự emit INITIAL_SESSION ngay khi mount
-    // → không cần gọi getSession() riêng nữa
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        // requestAnimationFrame đảm bảo navigator đã mount xong trước khi navigate
-        requestAnimationFrame(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'HomeStack' }],
-          });
-        });
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
+  // 🔧 FIX: Bỏ onAuthStateChange ở đây hoàn toàn
+  //    Session check đã được xử lý ở StackNavigator (initialRouteName)
+  //    → không còn risk navigate khi navigator chưa mount
 
   async function signIn() {
     try {
       setLoadingLogin(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      Alert.alert('Thông báo', 'Đăng nhập thành công');
+
+      // Navigate sau khi login thành công — navigator đã mount sẵn rồi nên an toàn
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomeStack' }],
+      });
     } catch (err) {
       Alert.alert(
         'Lỗi đăng nhập',

@@ -1,7 +1,7 @@
 import { Text, TouchableOpacity, View, Animated } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
 
 import { Population } from '../screen/population';
 import { Crime } from '../screen/crime';
@@ -11,6 +11,7 @@ import { GetOneFamily } from '../screen/getOneFamily';
 import { CameraComponent } from '../screen/component/Camera';
 import { Login } from '../screen/login';
 import ExploreTopTab from './ExploreTopTab';
+import { supabase } from '../screen/lib.js';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -19,14 +20,11 @@ const Stack = createNativeStackNavigator();
 // Custom Bottom Tab Bar
 // ================================
 function CustomTabBar({ navigation, state }) {
-  // const insets = useSafeAreaInsets();
-
   const tabs = [
     { name: 'Tìm công dân', ref: 'SearchPopulationRef' },
     { name: 'Tìm đối tượng', ref: 'SearchCrimeRef' },
     { name: 'Bản đồ' },
     { name: 'Ghi chú' },
-    // { name: 'Thêm đối tượng', ref: 'SearchCrimeRef' },
   ];
 
   return (
@@ -42,7 +40,6 @@ function CustomTabBar({ navigation, state }) {
         justifyContent: 'space-between',
       }}
     >
-      {/* Tab 1 */}
       <TabItem
         tab={tabs[0]}
         index={0}
@@ -50,8 +47,6 @@ function CustomTabBar({ navigation, state }) {
         navigation={navigation}
         totalTabs={tabs.length}
       />
-
-      {/* Tab 2 */}
       <TabItem
         tab={tabs[1]}
         index={1}
@@ -71,7 +66,7 @@ function CustomTabBar({ navigation, state }) {
           backgroundColor: '#00c853',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 20, // tạo hiệu ứng nổi
+          marginBottom: 20,
           shadowColor: '#00c853',
           shadowOpacity: 0.6,
           shadowOffset: { width: 0, height: 4 },
@@ -82,7 +77,6 @@ function CustomTabBar({ navigation, state }) {
         <Text style={{ color: '#fff', fontSize: 26, top: -4 }}>📷</Text>
       </TouchableOpacity>
 
-      {/* Tab 3 */}
       <TabItem
         tab={tabs[2]}
         index={2}
@@ -90,8 +84,6 @@ function CustomTabBar({ navigation, state }) {
         navigation={navigation}
         totalTabs={tabs.length}
       />
-
-      {/* Tab 4 */}
       <TabItem
         tab={tabs[3]}
         index={3}
@@ -134,7 +126,6 @@ const TabItem = ({ tab, index, state, navigation, totalTabs }) => {
           fontWeight: isActive ? 'bold' : '500',
           textAlign: 'center',
           top: isActive ? -5 : 0,
-          // backgroundColor:'red'
         }}
       >
         {tab.name}
@@ -171,22 +162,33 @@ export function AppNavigators() {
       <Tab.Screen name="Tìm đối tượng" component={Crime} />
       <Tab.Screen name="Bản đồ" component={MapScreen} />
       <Tab.Screen name="Ghi chú" component={ExploreTopTab} />
-
-      {/* <Tab.Screen name="Thêm đối tượng" component={AddCrime} /> */}
     </Tab.Navigator>
   );
 }
 
 // ================================
 // Stack Navigator
+// 🔧 FIX: Check session ở đây thay vì trong Login
+//    → tránh navigation.reset() khi navigator chưa mount xong
 // ================================
 const StackNavigator = () => {
+  const [initialRoute, setInitialRoute] = useState(null); // null = đang check
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setInitialRoute(session ? 'HomeStack' : 'Login');
+    });
+  }, []);
+
+  // Đang check session → chưa render navigator (tránh flash + crash)
+  if (initialRoute === null) return null;
+
   return (
     <Stack.Navigator
+      initialRouteName={initialRoute}
       screenOptions={{
         headerStyle: { backgroundColor: '#007b55' },
         headerTintColor: 'white',
-        // headerShadowVisible: false,
       }}
     >
       <Stack.Screen
@@ -216,7 +218,7 @@ const StackNavigator = () => {
           headerTitleAlign: 'center',
           animation: 'simple_push',
           headerTitle: 'Thông tin hộ',
-          headerBackTitle: 'Quay lại', // iOS
+          headerBackTitle: 'Quay lại',
           headerTintColor: 'white',
         }}
       />
