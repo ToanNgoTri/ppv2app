@@ -175,9 +175,29 @@ const StackNavigator = () => {
   const [initialRoute, setInitialRoute] = useState(null); // null = đang check
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setInitialRoute(session ? 'HomeStack' : 'Login');
-    });
+    let mounted = true;
+
+    // Fallback: nếu getSession treo (mạng chập chờn lúc refresh token),
+    // sau 8s vẫn cho vào Login thay vì kẹt màn hình trắng.
+    const timeout = setTimeout(() => {
+      if (mounted) setInitialRoute(prev => (prev === null ? 'Login' : prev));
+    }, 8000);
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (mounted) setInitialRoute(session ? 'HomeStack' : 'Login');
+      })
+      .catch(err => {
+        console.error('getSession failed:', err);
+        if (mounted) setInitialRoute('Login');
+      })
+      .finally(() => clearTimeout(timeout));
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
   }, []);
 
   // Đang check session → chưa render navigator (tránh flash + crash)
