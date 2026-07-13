@@ -4,6 +4,7 @@ import {
   Text,
   Image,
   TouchableOpacity,
+  Pressable,
   Linking,
   ScrollView,
   Alert,
@@ -12,9 +13,19 @@ import {
 } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import Clipboard from '@react-native-clipboard/clipboard';
 
+const FLAG_LABELS = {
+  ANNINH: 'An ninh',
+  MATUY: 'Ma túy',
+  TUTHA: 'Tù tha',
+  THACD: 'THA CĐ',
+};
+const FLAG_KEYS = Object.keys(FLAG_LABELS);
+
 export function Item({ item, index, location }) {
+  const navigation = useNavigation();
   const [imageExists, setImageExists] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [LocationGG, setLocationGG] = useState('');
@@ -178,12 +189,24 @@ export function Item({ item, index, location }) {
     if (error) console.log('Lỗi cập nhật VANGNHA:', error.message);
   };
 
+  const goToEdit = () => {
+    Alert.alert('Thông báo', 'Sửa thông tin đối tượng này?', [
+      { text: 'Thoát', style: 'cancel' },
+      {
+        text: 'Sửa',
+        onPress: () => navigation.navigate('editCrime', { item }),
+      },
+    ]);
+  };
+
   /* ================= UI ================= */
   return (
     <View
       style={{ ...styles.card, backgroundColor: vangNha ? '#FFCDD2' : 'white' }}
     >
-      {/* HEADER */}
+      {/* Vùng nhấn giữ để sửa (không bao gồm bảng tội danh để bảng vuốt được) */}
+      <Pressable onLongPress={goToEdit} delayLongPress={350}>
+        {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.name}>
           {index}. {item['HOTEN']}
@@ -273,12 +296,33 @@ export function Item({ item, index, location }) {
               style={styles.image}
             />
           </TouchableOpacity>
+
+          {/* Phân loại đối tượng */}
+          <View style={styles.flagWrap}>
+            {FLAG_KEYS.filter(f => item[f]).length === 0 ? (
+              <Text style={styles.flagNone}>Chưa phân loại</Text>
+            ) : (
+              FLAG_KEYS.filter(f => item[f]).map(f => (
+                <View key={f} style={styles.flagBadge}>
+                  <Text style={styles.flagBadgeText}>{FLAG_LABELS[f]}</Text>
+                </View>
+              ))
+            )}
+          </View>
         </View>
       </View>
+      </Pressable>
 
       {/* BẢNG TỘI DANH */}
       <View style={{ marginTop: 12 }}>
-        <ScrollView horizontal>
+        <ScrollView
+          horizontal
+          nestedScrollEnabled={true}
+          directionalLockEnabled={true}
+          showsHorizontalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 4 }}
+        >
           <Table borderStyle={{ borderWidth: 1, borderColor: '#ADB5BD' }}>
             <Row
               data={tableHead}
@@ -350,6 +394,21 @@ const styles = {
     borderWidth: 1,
     borderColor: '#CED4DA',
   },
+  flagWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+    justifyContent: 'center',
+  },
+  flagBadge: {
+    backgroundColor: '#DC3545',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  flagBadgeText: { color: 'white', fontSize: 11, fontWeight: '700' },
+  flagNone: { color: '#ADB5BD', fontSize: 12, fontStyle: 'italic' },
   noteInput: {
     minHeight: 90,
     borderWidth: 1,

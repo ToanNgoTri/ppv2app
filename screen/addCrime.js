@@ -423,14 +423,10 @@ export function AddCrime() {
                 });
               }}
               keyboardType={
-                key == 'NAMSINH' || key == 'DAYARRES' || key == 'FREEDAY'
-                  ? 'numeric'
-                  : 'default'
+                ['NAMSINH', 'CCCD'].includes(key) ? 'numeric' : 'default'
               }
               autoCapitalize={
-                ['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(key)
-                  ? 'none'
-                  : 'characters'
+                ['NAMSINH', 'CCCD'].includes(key) ? 'none' : 'characters'
               }
               placeholder={`Nhập ${label.toLowerCase()}...`}
               ref={el => (inputRefs.current[index] = el)}
@@ -446,7 +442,7 @@ export function AddCrime() {
               style={styles.input}
               value={form[key]}
               onChangeText={v => {
-                if (['NAMSINH', 'DAYARRES', 'FREEDAY'].includes(key)) {
+                if (key === 'NAMSINH') {
                   handleChange(key, formatDateInput(v));
                 } else {
                   handleChange(key, v);

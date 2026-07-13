@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Population } from '../screen/population';
 import { Crime } from '../screen/crime';
 import { AddCrime } from '../screen/addCrime';
+import { EditCrime } from '../screen/editCrime';
 import { MapScreen } from '../screen/mapScreen';
 import { GetOneFamily } from '../screen/getOneFamily';
 import { CameraComponent } from '../screen/component/Camera';
@@ -24,7 +25,7 @@ function CustomTabBar({ navigation, state }) {
     { name: 'Tìm công dân', ref: 'SearchPopulationRef' },
     { name: 'Tìm đối tượng', ref: 'SearchCrimeRef' },
     { name: 'Bản đồ' },
-    { name: 'Ghi chú' },
+    { name: 'Thống kê' },
   ];
 
   return (
@@ -114,8 +115,14 @@ const TabItem = ({ tab, index, state, navigation, totalTabs }) => {
       }}
       onPress={() => {
         navigation.navigate(tab.name);
-        if (isActive && global[tab.ref]) {
-          global[tab.ref].scrollToOffset({ offset: 0 });
+        if (isActive && tab.ref && global[tab.ref]) {
+          const list = global[tab.ref];
+          // FlatList dùng scrollToOffset, KeyboardAwareFlatList dùng scrollToPosition
+          if (typeof list.scrollToOffset === 'function') {
+            list.scrollToOffset({ offset: 0 });
+          } else if (typeof list.scrollToPosition === 'function') {
+            list.scrollToPosition(0, 0);
+          }
         }
       }}
     >
@@ -161,7 +168,7 @@ export function AppNavigators() {
       <Tab.Screen name="Tìm công dân" component={Population} />
       <Tab.Screen name="Tìm đối tượng" component={Crime} />
       <Tab.Screen name="Bản đồ" component={MapScreen} />
-      <Tab.Screen name="Ghi chú" component={ExploreTopTab} />
+      <Tab.Screen name="Thống kê" component={ExploreTopTab} />
     </Tab.Navigator>
   );
 }
@@ -230,6 +237,18 @@ const StackNavigator = () => {
         name="addCrime"
         component={AddCrime}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="editCrime"
+        component={EditCrime}
+        options={{
+          headerShown: true,
+          headerTitleAlign: 'center',
+          animation: 'simple_push',
+          headerTitle: 'Sửa đối tượng',
+          headerBackTitle: 'Quay lại',
+          headerTintColor: 'white',
+        }}
       />
       <Stack.Screen
         name="getOneFamily"

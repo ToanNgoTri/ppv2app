@@ -38,6 +38,14 @@ export function Crime() {
 
   const [resetDropdownKey, setResetDropdownKey] = useState(0);
 
+  // Bộ lọc phân loại đối tượng (boolean)
+  const [flags, setFlags] = useState({
+    ANNINH: false,
+    MATUY: false,
+    TUTHA: false,
+    THACD: false,
+  });
+
   const netInfo = useNetInfo();
   let internetConnected = netInfo.isConnected;
 
@@ -49,6 +57,7 @@ export function Crime() {
     
     Keyboard.dismiss();
     setLoading(true);
+    const buildQuery = () => {
     let query = supabase.from('crime').select('*');
     if (input1 !== '') {
       !['GIOITINH', 'VANGNHA'].includes(titleFilter1)
@@ -114,12 +123,39 @@ export function Crime() {
           ));
     }
 
-    const { data, error } = await query;
+    // Lọc theo phân loại đối tượng (chỉ áp dụng khi được bật)
+    Object.entries(flags).forEach(([field, on]) => {
+      if (on) query = query.eq(field, true);
+    });
 
-    setSearchResult(data || []);
+    return query;
+    };
+
+    // PostgREST giới hạn 1000 dòng/lần -> phân trang để lấy đủ kết quả
+    const PAGE = 1000;
+    let all = [];
+    for (let offset = 0; offset < 500000; offset += PAGE) {
+      const { data, error } = await buildQuery().range(offset, offset + PAGE - 1);
+      if (error) {
+        console.log('Search error:', error);
+        break;
+      }
+      const batch = data || [];
+      all = all.concat(batch);
+      if (batch.length < PAGE) break; // hết dữ liệu
+    }
+
+    setSearchResult(all);
     setLoading(false);
-    console.log('Search result:', data);
+    console.log('Search result:', all.length);
   }
+
+  const FLAG_LABELS = {
+    ANNINH: 'An ninh',
+    MATUY: 'Ma túy',
+    TUTHA: 'Tù tha',
+    THACD: 'THA CĐ',
+  };
 
   const title = [
     'HOTEN',
@@ -370,6 +406,49 @@ export function Crime() {
               );
             })}
 
+            {/* Phân loại đối tượng */}
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: 6,
+                marginBottom: 7,
+              }}
+            >
+              {Object.keys(FLAG_LABELS).map(field => {
+                const on = flags[field];
+                return (
+                  <TouchableOpacity
+                    key={field}
+                    onPress={() =>
+                      setFlags(prev => ({ ...prev, [field]: !prev[field] }))
+                    }
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 5,
+                      paddingHorizontal: 10,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: on ? '#198754' : '#ccc',
+                      backgroundColor: on ? '#198754' : '#fafafa',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: on ? 'white' : '#495057',
+                      }}
+                    >
+                      {on ? '✓ ' : ''}
+                      {FLAG_LABELS[field]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
             {/* Hàng dưới cùng */}
             <View
               style={{
@@ -478,6 +557,12 @@ export function Crime() {
                     setTitleFilter1('HOTEN');
                     setTitleFilter2('HOTEN');
                     setTitleFilter3('HOTEN');
+                    setFlags({
+                      ANNINH: false,
+                      MATUY: false,
+                      TUTHA: false,
+                      THACD: false,
+                    });
                     setResetDropdownKey(prev => prev + 1);
                   }}
                   style={{
@@ -511,18 +596,17 @@ export function Crime() {
         )}
         <View
           style={{
+            flex: 1,
             paddingLeft: 20,
             paddingRight: 20,
-            marginBottom: 110 + (visibleFilters - 1) * 47 + insets.top,
           }}
         >
           {searchResutl.length ? (
             <KeyboardAwareFlatList
               enableOnAndroid={true}
-              // extraHeight={200}
-                        extraScrollHeight={170}
-
-              // onScrollBeginDrag={() => Keyboard.dismiss()}
+              extraScrollHeight={170}
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={{ paddingBottom:  insets.bottom }}
               ref={ref => {
                 global.SearchCrimeRef = ref;
               }}

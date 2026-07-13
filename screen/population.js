@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Linking,
   PermissionsAndroid,
+  Platform,
   Image,
   ActivityIndicator,
 } from 'react-native';
@@ -185,8 +186,6 @@ async function pushToSearch() {
   Keyboard.dismiss();
   setLoading(true);
 
-  let query = supabase.from("population").select("*");
-
   // 👉 Hàm xử lý từng filter
   const applyFilter = (query, field, value) => {
     if (!value) return query;
@@ -221,17 +220,30 @@ async function pushToSearch() {
     return query.ilike(field, `%${value}%`);
   };
 
-  // 👉 Áp dụng 3 input
-  query = applyFilter(query, titleFilter1, input1);
-  query = applyFilter(query, titleFilter2, input2);
-  query = applyFilter(query, titleFilter3, input3);
+  // 👉 Dựng query với 3 input
+  const buildQuery = () => {
+    let query = supabase.from("population").select("*");
+    query = applyFilter(query, titleFilter1, input1);
+    query = applyFilter(query, titleFilter2, input2);
+    query = applyFilter(query, titleFilter3, input3);
+    return query;
+  };
 
-  const { data, error } = await query;
+  // PostgREST giới hạn 1000 dòng/lần -> phân trang để lấy đủ kết quả
+  const PAGE = 1000;
+  let all = [];
+  for (let offset = 0; offset < 500000; offset += PAGE) {
+    const { data, error } = await buildQuery().range(offset, offset + PAGE - 1);
+    if (error) {
+      console.log("Search error:", error);
+      break;
+    }
+    const batch = data || [];
+    all = all.concat(batch);
+    if (batch.length < PAGE) break; // hết dữ liệu
+  }
 
-  console.log("data", data);
-  console.log("error", error);
-
-  setSearchResult(data || []);
+  setSearchResult(all);
   setLoading(false);
 }
 
