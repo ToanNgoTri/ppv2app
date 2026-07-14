@@ -92,7 +92,9 @@ export function Population() {
           })
         }
         style={{
-          backgroundColor: item['VANGNHA']
+          backgroundColor: item['CRIMINALRECORD']
+            ? '#90CAF9'
+            : item['VANGNHA']
             ? '#ffcccc'
             : isEven
             ? '#F8F9FA'

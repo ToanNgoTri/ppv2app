@@ -59,7 +59,9 @@ function ItemPopulation({ item, index }) {
   return (
     <TouchableOpacity
       style={{
-        backgroundColor: vangNha
+        backgroundColor: item['CRIMINALRECORD']
+          ? '#90CAF9'
+          : vangNha
           ? '#FFCDD2'
           : isSelected
           ? '#FFD580'
