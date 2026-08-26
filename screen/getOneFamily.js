@@ -29,6 +29,12 @@ export function GetOneFamily() {
   // const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
   // let data = [];
+  const receiveLocation = async receive => {
+    const { data, error } = await supabase
+      .from('population')
+      .update({ LOCATION: receive.location }) // giá trị mới
+      .eq('CCCD', receive.CCCD); // điều kiện cập nhật
+  };
 
   useEffect(() => {
     navigation.setOptions({ title: `HSHK: ${route.params.screen}` }); //đổi title
@@ -106,7 +112,9 @@ export function GetOneFamily() {
           extraScrollHeight={100}
           keyboardShouldPersistTaps="handled"
           data={searchResult}
-          renderItem={({ item, index }) => <Item item={item} index={index} />}
+          renderItem={({ item, index }) => (
+            <Item item={item} index={index} location={receiveLocation} />
+          )}
         />
       </View>
     </>

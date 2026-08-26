@@ -1,13 +1,24 @@
-import { View, Text, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  Linking,
+  Alert,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+} from 'react-native';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import { Alert, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
+
 import { supabase } from '../lib.js';
 
-function ItemPopulation({ item, index }) {
+function ItemPopulation({ item, index, location }) {
   const route = useRoute();
   const navigation = useNavigation();
+
+  const [LocationGG, setLocationGG] = useState('');
 
   const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
   const [vangNha, setVangNha] = useState(item?.VANGNHA || false);
@@ -18,13 +29,96 @@ function ItemPopulation({ item, index }) {
   const isSelected = route?.params?.CCCD === item['CCCD'];
   const isEven = index % 2 === 0;
 
-  console.log();
-
   useEffect(() => {
     return () => {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
     };
   }, []);
+
+  const convertToDMS = (decimal, isLat) => {
+    const degrees = Math.floor(Math.abs(decimal));
+    const minutesFloat = (Math.abs(decimal) - degrees) * 60;
+    const minutes = Math.floor(minutesFloat);
+    const seconds = ((minutesFloat - minutes) * 60).toFixed(1);
+    const direction = decimal >= 0 ? (isLat ? 'N' : 'E') : isLat ? 'S' : 'W';
+    return `${degrees}°${minutes}'${seconds}"${direction}`;
+  };
+
+  const convertCoordinates = coordString => {
+    const [latStr, lonStr] = coordString.split(',').map(s => s.trim());
+    return `${convertToDMS(parseFloat(latStr), true)},${convertToDMS(
+      parseFloat(lonStr),
+      false,
+    )}`;
+  };
+
+  const getCopiedText = async () => {
+    const text = await Clipboard.getString();
+    console.log('Copied text:', text);
+    setLocationGG(text);
+  };
+
+  async function deleteLocation() {
+    const { error } = await supabase
+      .from('population')
+      .update({ LOCATION: null })
+      .eq('CCCD', item['CCCD']);
+
+    Alert.alert(error ? 'Cập nhật thất bại' : 'Đã xoá vị trí');
+  }
+
+  const pushToSetLocation = async () => {
+    const toado = await extractLatLngFromGoogleMapsUrl(LocationGG);
+    // console.log('toado', toado);
+
+    if (!toado) {
+      Alert.alert(
+        'Lỗi',
+        'Không tìm thấy tọa độ trong liên kết ' +
+          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
+          ' Map',
+      );
+      setLocationGG('');
+      return;
+    }
+
+    location({ CCCD: item['CCCD'], location: toado });
+    setLocationGG('');
+    Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+  };
+
+  const extractLatLngFromGoogleMapsUrl = async url => {
+    let result = await getCoordsFromShortLink(url);
+    console.log('result1', result);
+
+    // console.log('result.finalUrl', result.finalUrl);
+
+    const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+    if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
+    return result.location;
+  };
+
+  const getCoordsFromShortLink = async shortUrl => {
+    console.log('getCoordsFromShortLink');
+    console.log('shortUrl', shortUrl);
+    const response = await fetch(shortUrl, { redirect: 'follow' });
+
+    const finalUrl = response.url;
+    console.log('response', response);
+
+    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (!match) {
+      match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
+    }
+    console.log('match1', match);
+
+    if (!match) return { finalUrl };
+    return {
+      location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
+      finalUrl,
+    };
+  };
 
   const onChangeGhiChu = text => {
     setGhiChu(text);
@@ -178,6 +272,7 @@ function ItemPopulation({ item, index }) {
         <Text style={styles.infoText}>
           Nơi ở hiện tại: {item['NOIOHIENTAI']}
         </Text>
+
         {isEditingPhone ? (
           <View style={{ width: '100%', marginTop: 8 }}>
             <TextInput
@@ -244,6 +339,57 @@ function ItemPopulation({ item, index }) {
             </Text>
           )
         )}
+        <View style={{ width: '100%' }}>
+        {item['LOCATION'] ? (
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL(
+                `https://www.google.com/maps/place/${convertCoordinates(
+                  item['LOCATION'],
+                )}`,
+              )
+            }
+            onLongPress={deleteLocation}
+          >
+            <Text style={{ color: '#0D6EFD', fontWeight: '600' }}>
+              📍 Xem vị trí
+            </Text>
+          </TouchableOpacity>
+        ) : !LocationGG ? (
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#0D6EFD',
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={getCopiedText}
+          >
+            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+              Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#1ed206ff',
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={pushToSetLocation}
+          >
+            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+              Gửi
+            </Text>
+          </TouchableOpacity>
+        )}
+                  </View>
+
       </View>
       <View style={{ marginTop: 10 }}>
         <TextInput

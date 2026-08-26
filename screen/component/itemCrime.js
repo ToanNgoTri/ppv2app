@@ -160,7 +160,13 @@ export function Item({ item, index, location }) {
   const getCoordsFromShortLink = async shortUrl => {
     console.log('getCoordsFromShortLink');
 
-    const response = await fetch(shortUrl, { redirect: 'follow' });
+try {
+  const response = await fetch(shortUrl, { redirect: 'follow' });
+  console.log('finalUrl', response.url);
+} catch (err) {
+  console.log('fetch error:', err.message); // sẽ thấy CORS error ở đây
+  return { finalUrl: shortUrl }; // trả về URL gốc nếu có lỗi
+}
     const finalUrl = response.url;
     console.log('finalUrl', finalUrl);
 
@@ -230,8 +236,19 @@ export function Item({ item, index, location }) {
             {item['GIOITINH'] ? 'Vợ' : 'Chồng'}: {item['TENVO']}
           </Text>
           <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
+            { item['LINKFOLDER'] && 
+             <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(item['LINKFOLDER'])
+              }
+            >
+              <Text style={{ fontWeight: '600' ,color: '#ff0000', marginBottom: 3 }}>
+                Xem thư mục hồ sơ
+              </Text>
+            </TouchableOpacity>
+            }
           <TouchableOpacity onPress={toggleVangNha}>
-            <Text style={{ ...styles.infoText, fontWeight: 'bold' }}>
+            <Text style={{ ...styles.infoText, fontWeight: 'bold',marginBottom: 3  }}>
               Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
             </Text>
           </TouchableOpacity>
