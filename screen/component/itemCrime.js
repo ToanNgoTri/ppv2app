@@ -243,7 +243,7 @@ try {
               }
             >
               <Text style={{ fontWeight: '600' ,color: '#ff0000', marginBottom: 3 }}>
-                Xem thư mục hồ sơ
+                📂 Thư mục hồ sơ (thêm/sửa ảnh)
               </Text>
             </TouchableOpacity>
             }
