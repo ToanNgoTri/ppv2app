@@ -10,11 +10,14 @@ import {
   Alert,
   Platform,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Clipboard from '@react-native-clipboard/clipboard';
+
+import { getCurrentLocation } from '../../utils/getCurrentLocation.js';
 
 const FLAG_LABELS = {
   ANNINH: 'An ninh',
@@ -29,6 +32,9 @@ export function Item({ item, index, location }) {
   const [imageExists, setImageExists] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [LocationGG, setLocationGG] = useState('');
+  const [gettingGPS, setGettingGPS] = useState(false);
+  const [gpsAccuracy, setGpsAccuracy] = useState(null);
+  const [savedLocation, setSavedLocation] = useState(item?.LOCATION || null);
   const [showGhiChu, setShowGhiChu] = useState(false);
   /* ================= GHI CHÚ ================= */
   const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
@@ -122,6 +128,7 @@ export function Item({ item, index, location }) {
       .update({ LOCATION: null })
       .eq('CCCD', item['CCCD']);
 
+    if (!error) setSavedLocation(null);
     Alert.alert(error ? 'Cập nhật thất bại' : 'Đã xoá vị trí');
   }
 
@@ -141,8 +148,36 @@ export function Item({ item, index, location }) {
     }
 
     location({ CCCD: item['CCCD'], location: toado });
+    setSavedLocation(toado);
     setLocationGG('');
     Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+  };
+
+  // Lấy toạ độ GPS nơi đang đứng, không cần mở Google/Apple Map
+  const pushCurrentLocation = async () => {
+    if (gettingGPS) return;
+    setGettingGPS(true);
+    setGpsAccuracy(null);
+    try {
+      const result = await getCurrentLocation({
+        onProgress: acc => setGpsAccuracy(acc),
+      });
+      if (!result) return;
+
+      location({ CCCD: item['CCCD'], location: result.location });
+      setSavedLocation(result.location);
+      setLocationGG('');
+      Alert.alert(
+        'Đã lấy vị trí hiện tại',
+        `Toạ độ: ${result.location}` +
+          (result.accuracy
+            ? `\nSai số khoảng ${Math.round(result.accuracy)}m`
+            : ''),
+      );
+    } finally {
+      setGettingGPS(false);
+      setGpsAccuracy(null);
+    }
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
@@ -252,54 +287,6 @@ try {
               Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
             </Text>
           </TouchableOpacity>
-          {item['LOCATION'] ? (
-            <TouchableOpacity
-              onPress={() =>
-                Linking.openURL(
-                  `https://www.google.com/maps/place/${convertCoordinates(
-                    item['LOCATION'],
-                  )}`,
-                )
-              }
-              onLongPress={deleteLocation}
-            >
-              <Text style={{ color: '#0D6EFD', fontWeight: '600' }}>
-                📍 Xem vị trí
-              </Text>
-            </TouchableOpacity>
-          ) : !LocationGG ? (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#0D6EFD',
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onPress={getCopiedText}
-            >
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#1ed206ff',
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onPress={pushToSetLocation}
-            >
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Gửi
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         <View style={{ flex: 1 }}>
@@ -330,8 +317,79 @@ try {
       </View>
       </Pressable>
 
+      {/* VỊ TRÍ - hàng ngang phía trên bảng tội danh.
+          Đặt ngoài <Pressable> để giữ lâu không bật hộp thoại sửa đối tượng. */}
+      <View style={styles.locationRow}>
+        {savedLocation ? (
+          <TouchableOpacity
+            style={[styles.locationBtn, { backgroundColor: '#0D6EFD' }]}
+            onPress={() =>
+              Linking.openURL(
+                `https://www.google.com/maps/place/${convertCoordinates(
+                  savedLocation,
+                )}`,
+              )
+            }
+            onLongPress={() =>
+              Alert.alert('Thông báo', 'Bạn có muốn xoá vị trí không?', [
+                { text: 'Thoát', style: 'cancel' },
+                { text: 'Xoá', onPress: deleteLocation },
+              ])
+            }
+          >
+            <Text style={styles.locationBtnText}>
+              📍 Xem vị trí (giữ để xoá)
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            {!LocationGG ? (
+              <TouchableOpacity
+                style={[styles.locationBtn, { backgroundColor: '#0D6EFD' }]}
+                onPress={getCopiedText}
+              >
+                <Text style={styles.locationBtnText}>
+                  🗺️ Lấy từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.locationBtn, { backgroundColor: '#1ed206ff' }]}
+                onPress={pushToSetLocation}
+              >
+                <Text style={styles.locationBtnText}>✓ Gửi địa chỉ đã copy</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[
+                styles.locationBtn,
+                { backgroundColor: gettingGPS ? '#6C757D' : '#FD7E14' },
+              ]}
+              disabled={gettingGPS}
+              onPress={pushCurrentLocation}
+            >
+              {gettingGPS ? (
+                <>
+                  <ActivityIndicator size="small" color="white" />
+                  <Text style={styles.locationBtnText}>
+                    {gpsAccuracy
+                      ? `Đang định vị ±${Math.round(gpsAccuracy)}m`
+                      : 'Đang định vị...'}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.locationBtnText}>
+                  🎯 Vị trí đang đứng
+                </Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
       {/* BẢNG TỘI DANH */}
-      <View style={{ marginTop: 12 }}>
+      <View style={{ marginTop: 8 }}>
         <ScrollView
           horizontal
           nestedScrollEnabled={true}
@@ -444,4 +502,25 @@ const styles = {
     marginTop: 6,
   },
   mapBtnText: { color: 'white', fontWeight: '600', fontSize: 14 },
+  locationRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  locationBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 6,
+    height: 38,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationBtnText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 13,
+    textAlign: 'center',
+  },
 };

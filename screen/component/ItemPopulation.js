@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoute } from '@react-navigation/native';
@@ -13,12 +15,16 @@ import { useNavigation } from '@react-navigation/native';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 import { supabase } from '../lib.js';
+import { getCurrentLocation } from '../../utils/getCurrentLocation.js';
 
 function ItemPopulation({ item, index, location }) {
   const route = useRoute();
   const navigation = useNavigation();
 
   const [LocationGG, setLocationGG] = useState('');
+  const [gettingGPS, setGettingGPS] = useState(false);
+  const [gpsAccuracy, setGpsAccuracy] = useState(null);
+  const [savedLocation, setSavedLocation] = useState(item?.LOCATION || null);
 
   const [ghiChu, setGhiChu] = useState(item?.GHICHU || '');
   const [vangNha, setVangNha] = useState(item?.VANGNHA || false);
@@ -64,6 +70,7 @@ function ItemPopulation({ item, index, location }) {
       .update({ LOCATION: null })
       .eq('CCCD', item['CCCD']);
 
+    if (!error) setSavedLocation(null);
     Alert.alert(error ? 'Cập nhật thất bại' : 'Đã xoá vị trí');
   }
 
@@ -83,8 +90,37 @@ function ItemPopulation({ item, index, location }) {
     }
 
     location({ CCCD: item['CCCD'], location: toado });
+    setSavedLocation(toado);
     setLocationGG('');
     Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
+  };
+
+  // Lấy toạ độ GPS nơi đang đứng, không cần mở Google/Apple Map
+  const pushCurrentLocation = async () => {
+    if (gettingGPS) return;
+    setGettingGPS(true);
+    setGpsAccuracy(null);
+    try {
+      const result = await getCurrentLocation({
+        onProgress: acc => setGpsAccuracy(acc),
+      });
+      if (!result) return;
+
+      location({ CCCD: item['CCCD'], location: result.location });
+      setSavedLocation(result.location);
+      setLocationGG('');
+      Alert.alert(
+        'Đã lấy vị trí hiện tại',
+        `Toạ độ: ${result.location}` +
+          (result.accuracy
+            ? `
+Sai số khoảng ${Math.round(result.accuracy)}m`
+            : ''),
+      );
+    } finally {
+      setGettingGPS(false);
+      setGpsAccuracy(null);
+    }
   };
 
   const extractLatLngFromGoogleMapsUrl = async url => {
@@ -339,57 +375,78 @@ function ItemPopulation({ item, index, location }) {
             </Text>
           )
         )}
-        <View style={{ width: '100%' }}>
-        {item['LOCATION'] ? (
+      </View>
+
+      {/* VỊ TRÍ - hàng ngang phía trên ô ghi chú */}
+      <View style={styles.locationRow}>
+        {savedLocation ? (
           <TouchableOpacity
+            style={[styles.locationBtn, { backgroundColor: '#0D6EFD' }]}
             onPress={() =>
               Linking.openURL(
                 `https://www.google.com/maps/place/${convertCoordinates(
-                  item['LOCATION'],
+                  savedLocation,
                 )}`,
               )
             }
-            onLongPress={deleteLocation}
+            onLongPress={() =>
+              Alert.alert('Thông báo', 'Bạn có muốn xoá vị trí không?', [
+                { text: 'Thoát', style: 'cancel' },
+                { text: 'Xoá', onPress: deleteLocation },
+              ])
+            }
           >
-            <Text style={{ color: '#0D6EFD', fontWeight: '600' }}>
-              📍 Xem vị trí
-            </Text>
-          </TouchableOpacity>
-        ) : !LocationGG ? (
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#0D6EFD',
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              borderRadius: 8,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onPress={getCopiedText}
-          >
-            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-              Nhận địa chỉ từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
+            <Text style={styles.locationBtnText}>
+              📍 Xem vị trí (giữ để xoá)
             </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#1ed206ff',
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              borderRadius: 8,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onPress={pushToSetLocation}
-          >
-            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-              Gửi
-            </Text>
-          </TouchableOpacity>
-        )}
-                  </View>
+          <>
+            {!LocationGG ? (
+              <TouchableOpacity
+                style={[styles.locationBtn, { backgroundColor: '#0D6EFD' }]}
+                onPress={getCopiedText}
+              >
+                <Text style={styles.locationBtnText}>
+                  🗺️ Lấy từ {Platform.OS === 'ios' ? 'Apple' : 'Google'} Map
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.locationBtn, { backgroundColor: '#1ed206ff' }]}
+                onPress={pushToSetLocation}
+              >
+                <Text style={styles.locationBtnText}>
+                  ✓ Gửi địa chỉ đã copy
+                </Text>
+              </TouchableOpacity>
+            )}
 
+            <TouchableOpacity
+              style={[
+                styles.locationBtn,
+                { backgroundColor: gettingGPS ? '#6C757D' : '#FD7E14' },
+              ]}
+              disabled={gettingGPS}
+              onPress={pushCurrentLocation}
+            >
+              {gettingGPS ? (
+                <>
+                  <ActivityIndicator size="small" color="white" />
+                  <Text style={styles.locationBtnText}>
+                    {gpsAccuracy
+                      ? `Đang định vị ±${Math.round(gpsAccuracy)}m`
+                      : 'Đang định vị...'}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.locationBtnText}>
+                  🎯 Vị trí đang đứng
+                </Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
       </View>
       <View style={{ marginTop: 10 }}>
         <TextInput
@@ -423,5 +480,26 @@ const styles = StyleSheet.create({
     color: '#495057',
     marginRight: 12,
     marginBottom: 4,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  locationBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 6,
+    height: 38,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationBtnText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
