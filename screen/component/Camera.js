@@ -16,8 +16,8 @@ import {
   useCodeScanner,
 } from 'react-native-vision-camera';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import ImageResizer from 'react-native-image-resizer';
-import RNFS from 'react-native-fs';
+import ImageResizer from '@bam.tech/react-native-image-resizer';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import { supabase } from '../lib.js';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { launchImageLibrary } from 'react-native-image-picker';
