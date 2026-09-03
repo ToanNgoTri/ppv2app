@@ -77,3 +77,7 @@ yarn-error.log
 # scripts OneDrive
 scripts/.onedrive-token.json
 scripts/out/
+
+# JVM crash logs
+hs_err_pid*.log
+replay_pid*.log
