@@ -45,6 +45,7 @@ const FLAG_LABELS = {
   MATUY: 'Ma túy',
   TUTHA: 'Tù tha',
   THACD: 'THA CĐ',
+  TREHU: 'Trẻ em hư',
 };
 
 export function EditCrime() {
@@ -82,6 +83,7 @@ export function EditCrime() {
     MATUY: original.MATUY === true,
     TUTHA: original.TUTHA === true,
     THACD: original.THACD === true,
+    TREHU: original.TREHU === true,
   });
 
   const [imageURL, setImageURL] = useState(null); // ảnh mới (local uri) nếu chụp lại
@@ -126,6 +128,15 @@ export function EditCrime() {
       onGoBack: data => {
         if ('photo' in data) setImageURL(data['photo']);
       },
+    });
+  }
+
+  // Cắt lại ảnh vừa chụp / vừa chọn (chỉ áp dụng cho ảnh mới)
+  function openCrop() {
+    if (!imageURL) return;
+    navigation.push('CropImage', {
+      uri: imageURL,
+      onDone: cropped => setImageURL(cropped),
     });
   }
 
@@ -391,6 +402,12 @@ export function EditCrime() {
             <Text style={styles.cameraText}>📷 Chụp / đổi ảnh</Text>
           </TouchableOpacity>
 
+          {imageURL && (
+            <TouchableOpacity style={styles.cropButton} onPress={openCrop}>
+              <Text style={styles.cameraText}>✂️ Cắt ảnh</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.saveButton} onPress={saveData}>
             {loadingSubmit ? (
               <ActivityIndicator color="#fff" />
@@ -481,6 +498,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cameraText: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  cropButton: {
+    backgroundColor: '#6366F1',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+  },
   saveButton: {
     backgroundColor: '#16A34A',
     paddingVertical: 14,

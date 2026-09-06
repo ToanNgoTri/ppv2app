@@ -21,27 +21,42 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { useNetInfo } from '@react-native-community/netinfo';
 
+const FLAG_LABELS = {
+  ANNINH: 'An ninh',
+  MATUY: 'Ma túy',
+  TUTHA: 'Tù tha',
+  THACD: 'THA CĐ',
+  TREHU: 'Trẻ em hư',
+};
+
+const EMPTY_FORM = {
+  HOTEN: '',
+  TENKHAC: '',
+  NAMSINH: '',
+  GIOITINH: true,
+  CCCD: '',
+  TENCHA: '',
+  TENME: '',
+  TENVO: '',
+  DANTOC: '',
+  TONGIAO: '',
+  NOITHTRU: '',
+  CHARGE: '',
+  JUDGMENT: '',
+  DAYARRES: '',
+  FREEDAY: '',
+  DETENTION: '',
+  LOCATION: '',
+  SOHOK: '',
+  ANNINH: false,
+  MATUY: false,
+  TUTHA: false,
+  THACD: false,
+  TREHU: false,
+};
+
 export function AddCrime() {
-  const [form, setForm] = useState({
-    HOTEN: '',
-    TENKHAC: '',
-    NAMSINH: '',
-    GIOITINH: true,
-    CCCD: '',
-    TENCHA: '',
-    TENME: '',
-    TENVO: '',
-    DANTOC: '',
-    TONGIAO: '',
-    NOITHTRU: '',
-    CHARGE: '',
-    JUDGMENT: '',
-    DAYARRES: '',
-    FREEDAY: '',
-    DETENTION: '',
-    LOCATION: '',
-    SOHOK: '',
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -84,6 +99,15 @@ export function AddCrime() {
           setImageURL(data['photo']);
         }
       },
+    });
+  }
+
+  // Cắt lại ảnh đang chọn
+  function openCrop() {
+    if (!imageURL) return;
+    navigation.push('CropImage', {
+      uri: imageURL,
+      onDone: cropped => setImageURL(cropped),
     });
   }
 
@@ -182,26 +206,7 @@ export function AddCrime() {
 
         return null;
       }
-      setForm({
-        HOTEN: '',
-        TENKHAC: '',
-        NAMSINH: '',
-        GIOITINH: "",
-        CCCD: '',
-        TENCHA: '',
-        TENME: '',
-        TENVO: '',
-        DANTOC: '',
-        TONGIAO: '',
-        NOITHTRU: '',
-        CHARGE: '',
-        JUDGMENT: '',
-        DAYARRES: '',
-        FREEDAY: '',
-        DETENTION: '',
-        LOCATION: '',
-        SOHOK: '',
-      });
+      setForm({ ...EMPTY_FORM, GIOITINH: '' });
             Alert.alert('Thành công', `Thông tin đã được thêm`);
 
       setImageURL(null);
@@ -394,6 +399,28 @@ export function AddCrime() {
         <Text style={styles.header}>📋 THÔNG TIN CÔNG DÂN</Text>
       </View>
       <View style={styles.formContainer}>
+        {/* Phân loại đối tượng */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Phân loại đối tượng</Text>
+          <View style={styles.flagRow}>
+            {Object.keys(FLAG_LABELS).map(field => {
+              const on = form[field];
+              return (
+                <TouchableOpacity
+                  key={field}
+                  onPress={() => handleChange(field, !form[field])}
+                  style={[styles.flagChip, on && styles.flagChipActive]}
+                >
+                  <Text style={[styles.flagText, on && styles.flagTextActive]}>
+                    {on ? '✓ ' : ''}
+                    {FLAG_LABELS[field]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         {Object.entries({
           HOTEN: 'Họ và tên',
           TENKHAC: 'Tên khác',
@@ -511,6 +538,12 @@ export function AddCrime() {
         <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
           <Text style={styles.cameraText}>📷 Mở Camera</Text>
         </TouchableOpacity>
+
+        {imageURL && (
+          <TouchableOpacity style={styles.cropButton} onPress={openCrop}>
+            <Text style={styles.cameraText}>✂️ Cắt ảnh</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.saveButton} onPress={() => saveData()}>
                   {loadingSubmit ? (
                     <ActivityIndicator color="#fff" />
@@ -568,6 +601,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cameraText: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  flagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  flagChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+  },
+  flagChipActive: { backgroundColor: '#16A34A', borderColor: '#16A34A' },
+  flagText: { fontWeight: '600', color: '#334155', fontSize: 13 },
+  flagTextActive: { color: '#fff' },
+  cropButton: {
+    backgroundColor: '#6366F1',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+  },
   saveButton: {
     backgroundColor: '#16A34A',
     paddingVertical: 14,

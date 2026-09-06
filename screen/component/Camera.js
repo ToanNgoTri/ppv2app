@@ -170,6 +170,15 @@ export function CameraComponent() {
     }
   };
 
+  // ✅ Mở màn hình cắt ảnh cho ảnh vừa chụp / vừa chọn
+  const openCrop = (uri = photo) => {
+    if (!uri) return;
+    navigation.push('CropImage', {
+      uri,
+      onDone: cropped => setPhoto(cropped),
+    });
+  };
+
   // ✅ Chọn ảnh và gửi về màn hình trước
   const choseImage = () => {
     if (route.params?.onGoBack && photo) {
@@ -194,7 +203,10 @@ export function CameraComponent() {
         <Text style={styles.text}>Không có quyền truy cập camera</Text>
         <TouchableOpacity
           onPress={requestPermission}
-          style={[styles.retryButton, { backgroundColor: '#007AFF' }]}
+          style={[
+            styles.retryButton,
+            { backgroundColor: '#007AFF', marginTop: 20 },
+          ]}
         >
           <Text style={{ color: '#fff' }}>Cấp quyền</Text>
         </TouchableOpacity>
@@ -315,15 +327,38 @@ export function CameraComponent() {
           ) : (
             <View style={styles.preview}>
               <Image source={{ uri: photo }} style={styles.imagePreview} />
-              <TouchableOpacity onPress={choseImage} style={styles.agreeButton}>
-                <Text style={{ color: '#fff' }}>Đồng ý</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setPhoto(null)}
-                style={styles.retryButton}
-              >
-                <Text style={{ color: '#fff' }}>Chụp lại</Text>
-              </TouchableOpacity>
+
+              <View style={styles.previewActions}>
+                <TouchableOpacity
+                  onPress={() => openCrop()}
+                  style={styles.cropButton}
+                >
+                  <Text style={{ color: '#fff' }}>✂️ Cắt ảnh</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={choseImage}
+                  style={styles.agreeButton}
+                >
+                  <Text style={{ color: '#fff' }}>Đồng ý</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.previewActions}>
+                <TouchableOpacity
+                  onPress={pickImageFromGallery}
+                  style={styles.galleryButton}
+                >
+                  <Text style={{ color: '#fff' }}>Chọn ảnh khác</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setPhoto(null)}
+                  style={styles.retryButton}
+                >
+                  <Text style={{ color: '#fff' }}>Chụp lại</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </>
@@ -349,16 +384,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   preview: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  imagePreview: { width: '90%', height: '70%', borderRadius: 10 },
+  imagePreview: { width: '90%', height: '60%', borderRadius: 10 },
+  previewActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  cropButton: {
+    backgroundColor: '#0EA5E9',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
   retryButton: {
-    marginTop: 20,
     backgroundColor: '#FF3B30',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
   },
   agreeButton: {
-    marginTop: 20,
     backgroundColor: '#0ACC00',
     paddingHorizontal: 20,
     paddingVertical: 10,

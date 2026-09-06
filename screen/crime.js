@@ -44,6 +44,7 @@ export function Crime() {
     MATUY: false,
     TUTHA: false,
     THACD: false,
+    TREHU: false,
   });
 
   const netInfo = useNetInfo();
@@ -155,6 +156,7 @@ export function Crime() {
     MATUY: 'Ma túy',
     TUTHA: 'Tù tha',
     THACD: 'THA CĐ',
+    TREHU: 'Trẻ em hư',
   };
 
   const title = [
@@ -562,6 +564,7 @@ export function Crime() {
                       MATUY: false,
                       TUTHA: false,
                       THACD: false,
+                      TREHU: false,
                     });
                     setResetDropdownKey(prev => prev + 1);
                   }}

@@ -17,12 +17,13 @@ const FLAG_LABELS = {
   MATUY: 'Ma túy',
   TUTHA: 'Tù tha',
   THACD: 'THA CĐ',
+  TREHU: 'Trẻ em hư',
 };
 
 /**
  * Màn hình thống kê theo điều kiện, dùng chung cho 2 bảng:
  *  - population (dân số): giới tính, khoảng năm sinh, vắng nhà
- *  - crime (đối tượng): thêm các phân loại ANNINH / MATUY / TUTHA / THACD
+ *  - crime (đối tượng): thêm các phân loại ANNINH / MATUY / TUTHA / THACD / TREHU
  * Chỉ thống kê khi người dùng chọn ít nhất một điều kiện và bấm "Thống kê".
  */
 export function Statistics({ route }) {
@@ -40,6 +41,7 @@ export function Statistics({ route }) {
     MATUY: false,
     TUTHA: false,
     THACD: false,
+    TREHU: false,
   });
 
   const [loading, setLoading] = useState(false);
@@ -116,7 +118,7 @@ export function Statistics({ route }) {
     setLoading(true);
     try {
       const columns = isCrime
-        ? 'GIOITINH,VANGNHA,DANTOC,TONGIAO,NAMSINH,SOHOK,ANNINH,MATUY,TUTHA,THACD'
+        ? 'GIOITINH,VANGNHA,DANTOC,TONGIAO,NAMSINH,SOHOK,ANNINH,MATUY,TUTHA,THACD,TREHU'
         : 'GIOITINH,VANGNHA,DANTOC,TONGIAO,NAMSINH,SOHOK';
 
       const from = fromYear.trim() ? parseInt(fromYear, 10) : null;
@@ -174,7 +176,13 @@ export function Statistics({ route }) {
     setVang('all');
     setFromYear('');
     setToYear('');
-    setFlags({ ANNINH: false, MATUY: false, TUTHA: false, THACD: false });
+    setFlags({
+      ANNINH: false,
+      MATUY: false,
+      TUTHA: false,
+      THACD: false,
+      TREHU: false,
+    });
     setStats(null);
   };
 

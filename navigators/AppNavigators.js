@@ -10,6 +10,7 @@ import { EditCrime } from '../screen/editCrime';
 import { MapScreen } from '../screen/mapScreen';
 import { GetOneFamily } from '../screen/getOneFamily';
 import { CameraComponent } from '../screen/component/Camera';
+import { CropImage } from '../screen/component/CropImage';
 import { Login } from '../screen/login';
 import ExploreTopTab from './ExploreTopTab';
 import { supabase } from '../screen/lib.js';
@@ -232,6 +233,11 @@ const StackNavigator = () => {
         name="Camera"
         component={CameraComponent}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CropImage"
+        component={CropImage}
+        options={{ headerShown: false, animation: 'fade' }}
       />
       <Stack.Screen
         name="addCrime"

@@ -24,6 +24,7 @@ const FLAG_LABELS = {
   MATUY: 'Ma túy',
   TUTHA: 'Tù tha',
   THACD: 'THA CĐ',
+  TREHU: 'Trẻ em hư',
 };
 const FLAG_KEYS = Object.keys(FLAG_LABELS);
 
