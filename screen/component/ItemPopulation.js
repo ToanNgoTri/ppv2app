@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoute } from '@react-navigation/native';
@@ -30,6 +32,7 @@ function ItemPopulation({ item, index, location }) {
   const [vangNha, setVangNha] = useState(item?.VANGNHA || false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [phone, setPhone] = useState(item?.SDT || '');
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const saveTimeout = useRef(null);
 
   const isSelected = route?.params?.CCCD === item['CCCD'];
@@ -209,50 +212,7 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
         shadowRadius: 3,
         elevation: 2,
       }}
-      onLongPress={() => {
-        Alert.alert(
-          'Thông báo',
-          'Bạn có muốn cập nhật thông tin công dân?',
-          [
-            {
-              text: 'Thoát',
-              style: 'cancel',
-            },
-            {
-              text: 'Thao tác',
-              onPress: () => {
-                Alert.alert(
-                  'Chọn chức năng',
-                  '',
-                  [
-                    {
-                      text: 'Thêm đối tượng',
-                      onPress: () => {
-                        navigation.push('addCrime', { data: item });
-                      },
-                    },
-                    {
-                      text: `${item['VANGNHA'] ? 'Bỏ' : 'Đánh dấu'} vắng nhà`,
-                      onPress: toggleVangNha,
-                    },
-                    {
-                      text: 'Cập nhật SĐT',
-                      onPress: () => {
-                        setPhone(item?.SDT || '');
-                        setIsEditingPhone(true);
-                      },
-                    },
-                  ],
-                  { cancelable: true },
-                  { cancelAnimationFrame: true },
-                );
-              },
-            },
-          ],
-          { cancelable: true },
-          { cancelAnimationFrame: true },
-        );
-      }}
+      onLongPress={() => setShowActionMenu(true)}
     >
       {/* Dòng trên cùng: STT + Quan hệ */}
       <View
@@ -468,6 +428,61 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
           }}
         />
       </View>
+
+      {/* 🔧 Action Menu Modal */}
+      <Modal
+        visible={showActionMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowActionMenu(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Cập nhật thông tin công dân</Text>
+            <ScrollView>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => {
+                  navigation.push('addCrime', { data: item });
+                  setShowActionMenu(false);
+                }}
+              >
+                <Text style={styles.menuButtonText}>➕ Thêm đối tượng</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => {
+                  toggleVangNha();
+                  setShowActionMenu(false);
+                }}
+              >
+                <Text style={styles.menuButtonText}>
+                  {item['VANGNHA'] ? '✓ Bỏ' : '⚠️ Đánh dấu'} vắng nhà
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => {
+                  setPhone(item?.SDT || '');
+                  setIsEditingPhone(true);
+                  setShowActionMenu(false);
+                }}
+              >
+                <Text style={styles.menuButtonText}>📞 Cập nhật SĐT</Text>
+              </TouchableOpacity>
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.menuButton, { backgroundColor: '#6C757D' }]}
+              onPress={() => setShowActionMenu(false)}
+            >
+              <Text style={styles.menuButtonText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </TouchableOpacity>
   );
 }
@@ -497,6 +512,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   locationBtnText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    width: '80%',
+    maxHeight: '80%',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#212529',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  menuButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  menuButtonText: {
     color: 'white',
     fontWeight: '600',
     fontSize: 14,

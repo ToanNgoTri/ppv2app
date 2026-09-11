@@ -35,10 +35,15 @@ export function Login() {
       if (error) throw error;
 
       // Navigate sau khi login thành công — navigator đã mount sẵn rồi nên an toàn
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'HomeStack' }],
-      });
+      try {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'HomeStack' }],
+        });
+      } catch (navErr) {
+        console.error('Navigation reset failed:', navErr);
+        Alert.alert('Lỗi', 'Không thể chuyển trang. Vui lòng thử lại.');
+      }
     } catch (err) {
       Alert.alert(
         'Lỗi đăng nhập',

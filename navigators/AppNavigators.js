@@ -12,6 +12,7 @@ import { GetOneFamily } from '../screen/getOneFamily';
 import { CameraComponent } from '../screen/component/Camera';
 import { CropImage } from '../screen/component/CropImage';
 import { Login } from '../screen/login';
+import { SplashScreen } from '../screen/SplashScreen';
 import ExploreTopTab from './ExploreTopTab';
 import { supabase } from '../screen/lib.js';
 
@@ -181,6 +182,7 @@ export function AppNavigators() {
 // ================================
 const StackNavigator = () => {
   const [initialRoute, setInitialRoute] = useState(null); // null = đang check
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -188,17 +190,27 @@ const StackNavigator = () => {
     // Fallback: nếu getSession treo (mạng chập chờn lúc refresh token),
     // sau 8s vẫn cho vào Login thay vì kẹt màn hình trắng.
     const timeout = setTimeout(() => {
-      if (mounted) setInitialRoute(prev => (prev === null ? 'Login' : prev));
+      if (mounted) {
+        console.warn('Session check timeout - defaulting to Login');
+        setInitialRoute(prev => (prev === null ? 'Login' : prev));
+        setIsSplashVisible(false);
+      }
     }, 8000);
 
     supabase.auth
       .getSession()
       .then(({ data: { session } }) => {
-        if (mounted) setInitialRoute(session ? 'HomeStack' : 'Login');
+        if (mounted) {
+          setInitialRoute(session ? 'HomeStack' : 'Login');
+          setIsSplashVisible(false);
+        }
       })
       .catch(err => {
         console.error('getSession failed:', err);
-        if (mounted) setInitialRoute('Login');
+        if (mounted) {
+          setInitialRoute('Login');
+          setIsSplashVisible(false);
+        }
       })
       .finally(() => clearTimeout(timeout));
 
@@ -208,8 +220,8 @@ const StackNavigator = () => {
     };
   }, []);
 
-  // Đang check session → chưa render navigator (tránh flash + crash)
-  if (initialRoute === null) return null;
+  // Đang check session → hiển thị splash screen
+  if (isSplashVisible || initialRoute === null) return <SplashScreen />;
 
   return (
     <Stack.Navigator
