@@ -16,12 +16,51 @@ import { supabase } from './lib.js';
 import { Item } from './component/itemCrime.js';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/**
+ * Marker kèm tên.
+ *
+ * react-native-leaflet-view nhét thẳng chuỗi `icon` vào html của L.divIcon
+ * (xem hàm dựng icon trong node_modules/react-native-leaflet-view/android/src/
+ * main/assets/leaflet.html), nên truyền HTML vào đây là được. Lưu ý lib đoán
+ * kiểu icon bằng cách dò chuỗi: nếu html chứa "http" + "//" hoặc "base64" nó sẽ
+ * hiểu nhầm là ảnh và bọc trong <img>, vì vậy tuyệt đối không dùng url trong
+ * đoạn html này.
+ *
+ * Trường `title` của marker thì lib render thành <Tooltip> của react-leaflet —
+ * chỉ hiện khi hover nên trên điện thoại không bao giờ thấy.
+ */
+const escapeHtml = str =>
+  String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+function markerWithName(name) {
+  const label = escapeHtml(name).trim();
+  const pin = `<div style="font-size:24px;line-height:24px">📍</div>`;
+  if (!label) return `<div style="display:flex;justify-content:center">${pin}</div>`;
+
+  // Nhãn đặt absolute để cái ghim vẫn nằm đúng chỗ cũ, thêm chữ không làm
+  // marker bị đẩy lệch khỏi toạ độ.
+  return (
+    `<div style="position:relative;display:flex;justify-content:center">` +
+    pin +
+    `<div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);` +
+    `max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;` +
+    `font-family:sans-serif;font-size:11px;line-height:14px;font-weight:600;` +
+    `color:#212529;background:rgba(255,255,255,0.9);border:1px solid rgba(0,0,0,0.2);` +
+    `border-radius:6px;padding:1px 5px">${label}</div>` +
+    `</div>`
+  );
+}
+
 export function MapScreen() {
   const [mapMarkers, setMapMarkers] = useState([
     {
       id: '1',
       position: { lat: 10.8926975, lng: 107.2258088 },
-      icon: '📍',
+      icon: markerWithName('HÀNG GÒN'),
       size: [32, 32],
       title: 'HÀNG GÒN',
     },
@@ -86,7 +125,7 @@ export function MapScreen() {
         dataMarkers.push({
           id: item.CCCD,
           position: convertCoordinates(item.LOCATION),
-          icon: '📍',
+          icon: markerWithName(item.HOTEN),
           size: [25, 25],
           title: item.HOTEN,
         });
