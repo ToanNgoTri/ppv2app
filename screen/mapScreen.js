@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Text,
   StatusBar,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LeafletView } from 'react-native-leaflet-view';
@@ -114,19 +116,25 @@ export function MapScreen() {
         onMessageReceived={handleMapEvent}
       />
       <Modal
-        presentationStyle="pageSheet"
+        presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
         animationType="slide"
         visible={showModal}
+        statusBarTranslucent
+        navigationBarTranslucent
         onRequestClose={() => setShowModal(false)}
       >
         <View style={{ flex: 1, backgroundColor: '#f0f4f4' }}>
-          {/* Header */}
+          {/* Header.
+              Android bật edge-to-edge (targetSdk >= 35) nên Modal vẽ tràn dưới
+              status bar -> phải chừa insets.top. iOS dùng pageSheet, card đã nằm
+              dưới status bar nên không cộng thêm. */}
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              height: 60,
+              height: 60 + (Platform.OS === 'android' ? insets.top : 0),
+              paddingTop: Platform.OS === 'android' ? insets.top : 0,
               paddingHorizontal: 12,
               backgroundColor: 'rgba(140, 184, 184, 1)',
               // borderBottomWidth: 1,
@@ -155,7 +163,16 @@ export function MapScreen() {
               <Text style={{ fontSize: 20, fontWeight: 'bold' }}>X</Text>
             </TouchableOpacity>
           </View>
-          <Item item={subjectSelect} index={1} />
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingHorizontal: 12,
+              paddingBottom: insets.bottom + 16,
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Item item={subjectSelect} index={1} />
+          </ScrollView>
         </View>
       </Modal>
     </SafeAreaView>
