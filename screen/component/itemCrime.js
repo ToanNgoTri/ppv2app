@@ -20,13 +20,94 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { getCurrentLocation } from '../../utils/getCurrentLocation.js';
 
 const FLAG_LABELS = {
-  ANNINH: 'An ninh',
-  MATUY: 'Ma túy',
-  TUTHA: 'Tù tha',
-  THACD: 'THA CĐ',
-  TREHU: 'Trẻ em hư',
+  ANNINH: 'AN',
+  MATUY: 'MT',
+  TUTHA: 'TUTHA',
+  THACD: 'THACĐ',
+  TREHU: 'TEH',
 };
 const FLAG_KEYS = Object.keys(FLAG_LABELS);
+
+/* ================= TÁCH TOẠ ĐỘ TỪ LINK MAP ================= */
+// Thứ tự ưu tiên: toạ độ của địa điểm (!3d!4d, coordinate=, ll=, q=) rồi mới tới
+// toạ độ tâm khung nhìn (@lat,lng) vì @ chỉ là vị trí camera, lệch so với điểm ghim.
+const COORD_PATTERNS = [
+  /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+  /coordinate=(-?\d+(?:\.\d+)?)(?:%2C|,)\s*(-?\d+(?:\.\d+)?)/i,
+  /[?&](?:ll|sll|center)=(-?\d+(?:\.\d+)?)(?:%2C|,)\s*(-?\d+(?:\.\d+)?)/i,
+  /[?&](?:q|daddr|saddr|destination|query)=(-?\d+(?:\.\d+)?)(?:%2C|,)\s*(-?\d+(?:\.\d+)?)/i,
+  /\/(?:search|dir|place)\/(-?\d+(?:\.\d+)?),\+?\s*(-?\d+(?:\.\d+)?)/,
+  /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+  /(-?\d{1,3}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/,
+];
+
+// Trong HTML trả về chỉ nhận 2 mẫu chắc chắn là toạ độ, tránh bắt nhầm số linh tinh.
+const BODY_PATTERNS = [
+  /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+  /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+];
+
+const toLocation = (latStr, lngStr) => {
+  const lat = parseFloat(latStr);
+  const lng = parseFloat(lngStr);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  if (lat === 0 && lng === 0) return null;
+  return `${lat}, ${lng}`;
+};
+
+const matchCoords = (text, patterns = COORD_PATTERNS) => {
+  if (!text) return null;
+  let decoded = text;
+  try {
+    decoded = decodeURIComponent(text);
+  } catch {}
+  for (const re of patterns) {
+    for (const source of decoded === text ? [text] : [text, decoded]) {
+      const m = source.match(re);
+      const loc = m && toLocation(m[1], m[2]);
+      if (loc) return loc;
+    }
+  }
+  return null;
+};
+
+// Link rút gọn (maps.app.goo.gl, goo.gl/maps, share.google...) không chứa toạ độ,
+// phải gọi mạng để đi theo redirect rồi mới đọc được URL đầy đủ.
+const resolveShortLink = async url => {
+  const res = await fetch(url, {
+    redirect: 'follow',
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+    },
+  });
+  const finalUrl = res.url || url;
+  let body = '';
+  try {
+    body = (await res.text()).slice(0, 500000);
+  } catch {}
+  return { finalUrl, body };
+};
+
+/**
+ * Nhận nội dung vừa copy (link Google/Apple Map, hoặc dán thẳng "lat, lng")
+ * và trả về chuỗi "lat, lng" đúng format cột LOCATION.
+ */
+const extractLocationFromText = async raw => {
+  const text = (raw || '').trim();
+  if (!text) return null;
+
+  const urlMatch = text.match(/https?:\/\/\S+/i);
+  if (!urlMatch) return matchCoords(text); // dán thẳng toạ độ
+
+  const url = urlMatch[0].replace(/[).,]+$/, '');
+  const fromUrl = matchCoords(url);
+  if (fromUrl) return fromUrl; // link dài đã có sẵn toạ độ, khỏi gọi mạng
+
+  const { finalUrl, body } = await resolveShortLink(url);
+  return matchCoords(finalUrl) || matchCoords(body, BODY_PATTERNS);
+};
 
 export function Item({ item, index, location }) {
   const navigation = useNavigation();
@@ -34,6 +115,7 @@ export function Item({ item, index, location }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [LocationGG, setLocationGG] = useState('');
   const [gettingGPS, setGettingGPS] = useState(false);
+  const [resolvingLink, setResolvingLink] = useState(false);
   const [gpsAccuracy, setGpsAccuracy] = useState(null);
   const [savedLocation, setSavedLocation] = useState(item?.LOCATION || null);
   const [showGhiChu, setShowGhiChu] = useState(false);
@@ -118,8 +200,18 @@ export function Item({ item, index, location }) {
     )}`;
   };
 
+  // Đọc clipboard. Chưa xử lý gì ở đây để bấm nút là có phản hồi ngay.
   const getCopiedText = async () => {
-    const text = await Clipboard.getString();
+    const text = (await Clipboard.getString())?.trim();
+    if (!text) {
+      Alert.alert(
+        'Clipboard trống',
+        'Mở ' +
+          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
+          ' Map, chọn địa điểm rồi bấm Chia sẻ / Sao chép liên kết, sau đó quay lại bấm nút này.',
+      );
+      return;
+    }
     setLocationGG(text);
   };
 
@@ -134,24 +226,47 @@ export function Item({ item, index, location }) {
   }
 
   const pushToSetLocation = async () => {
-    const toado = await extractLatLngFromGoogleMapsUrl(LocationGG);
-    // console.log('toado', toado);
+    if (resolvingLink) return;
+    setResolvingLink(true);
+    try {
+      const toado = await extractLocationFromText(LocationGG);
 
-    if (!toado) {
-      Alert.alert(
-        'Lỗi',
-        'Không tìm thấy tọa độ trong liên kết ' +
-          (Platform.OS === 'ios' ? 'Apple' : 'Google') +
-          ' Map',
-      );
+      if (!toado) {
+        Alert.alert(
+          'Không đọc được toạ độ',
+          'Nội dung đã copy không chứa toạ độ:\n\n' +
+            LocationGG.slice(0, 120) +
+            '\n\nHãy copy lại liên kết địa điểm trong ' +
+            (Platform.OS === 'ios' ? 'Apple' : 'Google') +
+            ' Map, hoặc dán trực tiếp dạng "16.0678, 108.2208".',
+        );
+        setLocationGG('');
+        return;
+      }
+
+      const saveError = await location({
+        CCCD: item['CCCD'],
+        location: toado,
+      });
+      if (saveError) {
+        Alert.alert('Lưu thất bại', saveError.message || 'Thử lại sau.');
+        return;
+      }
+
+      setSavedLocation(toado);
       setLocationGG('');
-      return;
+      Alert.alert('Cập nhật thành công', `Toạ độ: ${toado}`);
+    } catch (err) {
+      console.log('pushToSetLocation error:', err?.message);
+      Alert.alert(
+        'Lỗi xử lý liên kết',
+        'Không mở được liên kết rút gọn (' +
+          (err?.message || 'lỗi không xác định') +
+          '). Kiểm tra kết nối mạng rồi thử lại.',
+      );
+    } finally {
+      setResolvingLink(false);
     }
-
-    location({ CCCD: item['CCCD'], location: toado });
-    setSavedLocation(toado);
-    setLocationGG('');
-    Alert.alert('Cập nhật thành công', 'Vui lòng đợi đồng bộ thông tin');
   };
 
   // Lấy toạ độ GPS nơi đang đứng, không cần mở Google/Apple Map
@@ -165,7 +280,15 @@ export function Item({ item, index, location }) {
       });
       if (!result) return;
 
-      location({ CCCD: item['CCCD'], location: result.location });
+      const saveError = await location({
+        CCCD: item['CCCD'],
+        location: result.location,
+      });
+      if (saveError) {
+        Alert.alert('Lưu thất bại', saveError.message || 'Thử lại sau.');
+        return;
+      }
+
       setSavedLocation(result.location);
       setLocationGG('');
       Alert.alert(
@@ -179,44 +302,6 @@ export function Item({ item, index, location }) {
       setGettingGPS(false);
       setGpsAccuracy(null);
     }
-  };
-
-  const extractLatLngFromGoogleMapsUrl = async url => {
-    let result = await getCoordsFromShortLink(url);
-    console.log('result1', result);
-
-    // console.log('result.finalUrl', result.finalUrl);
-
-    const match = result.finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-
-    if (match) return `${parseFloat(match[1])}, ${parseFloat(match[2])}`;
-    return result.location;
-  };
-
-  const getCoordsFromShortLink = async shortUrl => {
-    console.log('getCoordsFromShortLink');
-
-try {
-  const response = await fetch(shortUrl, { redirect: 'follow' });
-  console.log('finalUrl', response.url);
-} catch (err) {
-  console.log('fetch error:', err.message); // sẽ thấy CORS error ở đây
-  return { finalUrl: shortUrl }; // trả về URL gốc nếu có lỗi
-}
-    const finalUrl = response.url;
-    console.log('finalUrl', finalUrl);
-
-    let match = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    if (!match) {
-      match = finalUrl.match(/coordinate=(\d+\.\d+)%2C(-?\d+\.\d+)/);
-    }
-    console.log('match1', match);
-
-    if (!match) return { finalUrl };
-    return {
-      location: `${parseFloat(match[1])}, ${parseFloat(match[2])}`,
-      finalUrl,
-    };
   };
 
   const toggleVangNha = async () => {
@@ -355,10 +440,23 @@ try {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.locationBtn, { backgroundColor: '#1ed206ff' }]}
+                style={[
+                  styles.locationBtn,
+                  { backgroundColor: resolvingLink ? '#6C757D' : '#1ed206ff' },
+                ]}
+                disabled={resolvingLink}
                 onPress={pushToSetLocation}
               >
-                <Text style={styles.locationBtnText}>✓ Gửi địa chỉ đã copy</Text>
+                {resolvingLink ? (
+                  <>
+                    <ActivityIndicator size="small" color="white" />
+                    <Text style={styles.locationBtnText}>Đang đọc link...</Text>
+                  </>
+                ) : (
+                  <Text style={styles.locationBtnText}>
+                    ✓ Gửi địa chỉ đã copy
+                  </Text>
+                )}
               </TouchableOpacity>
             )}
 

@@ -124,10 +124,12 @@ export function Crime() {
           ));
     }
 
-    // Lọc theo phân loại đối tượng (chỉ áp dụng khi được bật)
-    Object.entries(flags).forEach(([field, on]) => {
-      if (on) query = query.eq(field, true);
-    });
+    // Lọc theo phân loại đối tượng: tích nhiều tag thì lấy đối tượng thuộc
+    // BẤT KỲ tag nào (OR), không bắt buộc phải có đủ tất cả.
+    const onFlags = Object.keys(flags).filter(field => flags[field]);
+    if (onFlags.length) {
+      query = query.or(onFlags.map(field => `${field}.is.true`).join(','));
+    }
 
     return query;
     };
@@ -152,11 +154,11 @@ export function Crime() {
   }
 
   const FLAG_LABELS = {
-    ANNINH: 'An ninh',
-    MATUY: 'Ma túy',
-    TUTHA: 'Tù tha',
-    THACD: 'THA CĐ',
-    TREHU: 'Trẻ em hư',
+    ANNINH: 'AN',
+    MATUY: 'MT',
+    TUTHA: 'TUTHA',
+    THACD: 'THACĐ',
+    TREHU: 'TEH',
   };
 
   const title = [
@@ -180,11 +182,16 @@ export function Crime() {
     'GHICHU',
   ];
 
+  // Trả lỗi về cho Item để nó biết đã lưu được hay chưa (trước đây nuốt lỗi,
+  // Item luôn báo "Cập nhật thành công" dù supabase từ chối).
   const receiveLocation = async receive => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('crime')
       .update({ LOCATION: receive.location }) // giá trị mới
       .eq('CCCD', receive.CCCD); // điều kiện cập nhật
+
+    if (error) console.log('Lỗi lưu LOCATION:', error.message);
+    return error;
   };
 
   return (
