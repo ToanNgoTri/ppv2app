@@ -7,6 +7,17 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!--
+      Android 11+ lọc gói theo tầm nhìn: không khai báo phần này thì
+      SpeechRecognizer.isRecognitionAvailable() luôn trả về false vì app không
+      "nhìn thấy" ứng dụng cung cấp dịch vụ nhận dạng giọng nói.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -27,6 +38,48 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+
+        <!--
+          Nhận lịch trực gửi từ Zalo.
+
+          Khai `application/*` chứ không liệt kê riêng pdf/doc/docx: tệp tải về
+          từ Zalo rất hay mang kiểu application/octet-stream (Zalo không đoán
+          được kiểu từ đuôi tên), liệt kê hẹp thì app không hiện trong bảng chia
+          sẻ. Vẫn đủ hẹp để không chen vào phần chia sẻ chữ, video hay nhạc.
+        -->
+        <intent-filter>
+            <action android:name="android.intent.action.SEND" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="image/*" />
+            <data android:mimeType="application/*" />
+        </intent-filter>
+
+        <!--
+          Nút "Mở bằng" ở màn hình xem tệp của Zalo. Ở đây nhận mọi kiểu tệp:
+          người dùng đã tự chọn app trong một danh sách ngắn, và Zalo thường
+          khai báo kiểu tệp là */* khi không đoán được từ đuôi tên tệp.
+        -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:scheme="content" android:mimeType="*/*" />
+            <data android:scheme="file" android:mimeType="*/*" />
+        </intent-filter>
       </activity>
+
+      <!--
+        Android 7 trở lên cấm bắn file:// sang app khác, nên lúc mở lịch trực
+        dạng Word/PDF phải cấp cho ứng dụng đọc văn bản một content:// tạm thời.
+        Authority có hậu tố riêng để không đụng FileProvider của thư viện khác.
+      -->
+      <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.sharedfile"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <meta-data
+          android:name="android.support.FILE_PROVIDER_PATHS"
+          android:resource="@xml/shared_file_paths" />
+      </provider>
     </application>
 </manifest>

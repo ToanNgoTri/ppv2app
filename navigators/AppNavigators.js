@@ -13,7 +13,8 @@ import { CameraComponent } from '../screen/component/Camera';
 import { CropImage } from '../screen/component/CropImage';
 import { Login } from '../screen/login';
 import { SplashScreen } from '../screen/SplashScreen';
-import ExploreTopTab from './ExploreTopTab';
+import { DutySchedule } from '../screen/dutySchedule';
+import { useIncomingDutyFile } from '../utils/useIncomingDutyFile';
 import { supabase } from '../screen/lib.js';
 
 const Tab = createBottomTabNavigator();
@@ -23,11 +24,17 @@ const Stack = createNativeStackNavigator();
 // Custom Bottom Tab Bar
 // ================================
 function CustomTabBar({ navigation, state }) {
+  // Tệp lịch trực từ Zalo có thể tới bất cứ lúc nào, kể cả khi người dùng đang
+  // ở tab khác. Thanh tab là thành phần duy nhất luôn được dựng sẵn bên trong
+  // bộ điều hướng tab, nên việc nhận tệp đặt ở đây: nhận xong là chuyển thẳng
+  // sang màn hình Lịch trực để người dùng thấy ngay bản vừa nhận.
+  useIncomingDutyFile(() => navigation.navigate('Lịch trực'));
+
   const tabs = [
     { name: 'Tìm công dân', ref: 'SearchPopulationRef' },
     { name: 'Tìm đối tượng', ref: 'SearchCrimeRef' },
     { name: 'Bản đồ' },
-    { name: 'Thống kê' },
+    { name: 'Lịch trực' },
   ];
 
   return (
@@ -170,7 +177,7 @@ export function AppNavigators() {
       <Tab.Screen name="Tìm công dân" component={Population} />
       <Tab.Screen name="Tìm đối tượng" component={Crime} />
       <Tab.Screen name="Bản đồ" component={MapScreen} />
-      <Tab.Screen name="Thống kê" component={ExploreTopTab} />
+      <Tab.Screen name="Lịch trực" component={DutySchedule} />
     </Tab.Navigator>
   );
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Bản lịch trực đang giữ (RNFS.DocumentDirectoryPath/lich-truc). -->
+    <files-path name="lich-truc" path="lich-truc/" />
+    <!-- Tệp vừa nhận từ app khác, chưa kịp chuyển sang thư mục giữ lâu dài. -->
+    <cache-path name="shared-in" path="shared-in/" />
+</paths>

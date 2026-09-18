@@ -9,9 +9,6 @@ import {
   Keyboard,
   StyleSheet,
   Linking,
-  PermissionsAndroid,
-  Platform,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -19,9 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 import { useNetInfo } from '@react-native-community/netinfo';
 
-import VoiceToText, {
-  VoiceToTextEvents,
-} from '@appcitor/react-native-voice-to-text';
+import MicButton from './component/MicButton.js';
 
 export function Population() {
   const [input1, setInput1] = useState('');
@@ -38,7 +33,6 @@ export function Population() {
 
   const [visibleFilters, setVisibleFilters] = useState(1);
 
-  const [isListening, setIsListening] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
@@ -53,31 +47,6 @@ export function Population() {
     }
     getUser();
 
-    const resultsListener = VoiceToText.addEventListener(
-      VoiceToTextEvents.RESULTS,
-      event => {
-        setInput1(event.value.toUpperCase());
-      },
-    );
-
-    const startListener = VoiceToText.addEventListener(
-      VoiceToTextEvents.START,
-      () => setIsListening(true),
-    );
-
-    const endListener = VoiceToText.addEventListener(
-      VoiceToTextEvents.END,
-      () => setIsListening(false),
-    );
-
-    // Clean up
-    return () => {
-      VoiceToText.destroy();
-      resultsListener.remove();
-      startListener.remove();
-      endListener.remove();
-      setIsListening(false);
-    };
   }, []);
 
   function Item({ item, index }) {
@@ -265,40 +234,6 @@ async function pushToSearch() {
     'GHICHU',
   ];
 
-  async function requestMicrophonePermission() {
-    if (Platform.OS !== 'android') return true;
-
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-        {
-          title: 'Microphone Permission',
-          message:
-            'This app needs access to your microphone for speech recognition',
-          buttonPositive: 'OK',
-        },
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  }
-  const toggleListening = async () => {
-    const ok = await requestMicrophonePermission();
-    if (!ok) return;
-
-    try {
-      if (isListening) {
-        await VoiceToText.stopListening();
-        setIsListening(false);
-      } else {
-        await VoiceToText.startListening();
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
     const callPhone = phone => {
       if (!phone) return;
@@ -453,10 +388,11 @@ async function pushToSearch() {
                     borderRadius: 8,
                     borderWidth: 1,
                     borderColor: '#ccc',
-                    paddingHorizontal: 10,
+                    paddingLeft: 10,
                     height: 40,
                     flex: 1,
                     marginLeft: 8,
+
                   }}
                 >
                   <TextInput
@@ -480,24 +416,11 @@ async function pushToSearch() {
                     selectTextOnFocus={true}
                     onSubmitEditing={() => pushToSearch()}
                   />
-                  {num == 1 && (
-                    <TouchableOpacity
-                      onPress={toggleListening}
-                      style={{ marginLeft: 8 }}
-                    >
-                      <Image
-                        source={
-                          !isListening
-                            ? require('../asset/micro-on.png')
-                            : require('../asset/micro-off.png')
-                        }
-                        style={{
-                          width: 24,
-                          height: 24,
-                        }}
-                      />
-                    </TouchableOpacity>
-                  )}
+                  <MicButton
+                    value={currentInput}
+                    onChangeText={setCurrentInput}
+                    transform={text => text.toUpperCase()}
+                  />
                 </View>
               </View>
               // </View>

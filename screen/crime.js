@@ -16,6 +16,7 @@ import { useNetInfo } from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './lib.js';
 import { Item } from './component/itemCrime.js';
+import MicButton from './component/MicButton.js';
 import {
   KeyboardAwareScrollView,
   KeyboardAwareFlatList,
@@ -381,10 +382,10 @@ export function Crime() {
                       borderRadius: 8,
                       borderWidth: 1,
                       borderColor: '#ccc',
-                      paddingHorizontal: 10,
+                      paddingHorizontal: 0,
                       height: 40,
                       flex: 1,
-                      // marginLeft: 8,
+                      paddingLeft: 10,
                     }}
                   >
                     <TextInput
@@ -409,6 +410,11 @@ export function Crime() {
                       autoCapitalize={CapitalBool}
                       keyboardType={keyboardType} // ✅ auto đổi
                       onSubmitEditing={() => pushToSearch()}
+                    />
+                    <MicButton
+                      value={currentInput}
+                      onChangeText={setCurrentInput}
+                      transform={text => text.toUpperCase()}
                     />
                   </View>
                 </View>

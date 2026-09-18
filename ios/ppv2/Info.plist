@@ -8,6 +8,25 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>ppv2</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Lich truc</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<!-- Chi la mot lua chon phu, khong gianh quyen mo mac dinh cua Anh/Word/PDF. -->
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.image</string>
+				<string>com.adobe.pdf</string>
+				<string>com.microsoft.word.doc</string>
+				<string>org.openxmlformats.wordprocessingml.document</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
