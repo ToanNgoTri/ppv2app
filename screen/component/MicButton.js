@@ -47,7 +47,8 @@ function appendPlain(existing, spoken) {
  * Nút đọc chính tả thời gian thực cho một ô nhập chữ.
  *
  * Chữ hiện dần ngay trong lúc nói (kết quả tạm), và phiên nghe không tự tắt sau
- * vài giây im lặng — nói bao lâu cũng được cho tới khi bấm dừng.
+ * vài giây im lặng — nói bao lâu cũng được cho tới khi bấm dừng. Bấm mic là xoá
+ * sạch chữ đang có trong ô: mỗi lần đọc bắt đầu lại từ trang trắng.
  *
  * Nút tự quản lý phiên nghe rồi gọi `onChangeText` với chữ đã ghép sẵn, nên chỗ
  * dùng chỉ cần đặt nút cạnh TextInput và truyền `value`/`onChangeText` giống hệt
@@ -221,7 +222,11 @@ export default function MicButton({
       await new Promise(resolve => setTimeout(resolve, 0));
     }
 
-    segmentBase.current = latestValue.current || '';
+    // Đọc bằng giọng nói là nhập lại từ đầu: xoá luôn chữ cũ trong ô rồi mới
+    // nghe, khỏi phải bấm xoá tay trước mỗi lần tìm.
+    segmentBase.current = '';
+    latestValue.current = '';
+    emit.current.onChangeText('');
     // Giành micro trước khi start: kết quả tạm có thể về ngay sau đó.
     activeOwner = id;
     setStarting(true);

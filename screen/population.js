@@ -166,6 +166,14 @@ async function pushToSearch() {
       return query.eq(field, value);
     }
 
+    // ✅ SĐT → bỏ mọi ký tự không phải số rồi tìm gần đúng. Số lưu trong máy là
+    // dãy số liền, còn người dùng hay gõ (hoặc đọc) thành "0912 345 678".
+    if (field === "SDT") {
+      const digits = value.replace(/\D/g, "");
+      if (!digits) return query;
+      return query.ilike(field, `%${digits}%`);
+    }
+
     // ✅ Boolean fields
     if (["GIOITINH", "VANGNHA"].includes(field)) {
       return query.eq(
@@ -227,6 +235,7 @@ async function pushToSearch() {
     'DANTOC',
     'TONGIAO',
     'CCCD',
+    'SDT',
     'NOITHTRU',
     'TENCHA',
     'TENME',
@@ -310,11 +319,13 @@ async function pushToSearch() {
             const setCurrentInput =
               num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
 
-            const keyboardType = ['NAMSINH', 'CCCD'].includes(currentTitle)
+            const keyboardType = ['NAMSINH', 'CCCD', 'SDT'].includes(
+              currentTitle,
+            )
               ? 'numeric'
               : 'default';
 
-            const CapitalBool = ['NAMSINH'].includes(currentTitle)
+            const CapitalBool = ['NAMSINH', 'SDT'].includes(currentTitle)
               ? 'none'
               : 'characters';
 
