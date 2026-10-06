@@ -1,3 +1,4 @@
+// // hang gon
 import { createClient } from '@supabase/supabase-js'
 import 'react-native-url-polyfill/auto' // nếu bạn dùng React Native CLI
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,7 +11,7 @@ const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUB
 });
 export { supabase }
 
-
+// // population
 // import { createClient } from '@supabase/supabase-js'
 // import 'react-native-url-polyfill/auto' // nếu bạn dùng React Native CLI
 // import AsyncStorage from '@react-native-async-storage/async-storage';
