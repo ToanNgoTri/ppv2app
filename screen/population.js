@@ -61,13 +61,17 @@ export function Population() {
           })
         }
         style={{
-          backgroundColor: item['CRIMINALRECORD']
+          // Nhân khẩu đã xóa (DELETED): nền xám, mờ đi — ưu tiên trên mọi màu khác
+          backgroundColor: item['DELETED']
+            ? '#BDBDBD'
+            : item['CRIMINALRECORD']
             ? '#90CAF9'
             : item['VANGNHA']
             ? '#ffcccc'
             : isEven
             ? '#F8F9FA'
             : '#E9ECEF',
+          opacity: item['DELETED'] ? 0.6 : 1,
           marginVertical: 6,
           padding: 12,
           borderRadius: 12,
@@ -88,7 +92,10 @@ export function Population() {
             marginBottom: 6,
           }}
         >
-          <Text style={{ fontSize: 12, color: '#6C757D' }}>STT: {index}</Text>
+          <Text style={{ fontSize: 12, color: '#6C757D' }}>
+            STT: {index}
+            {item['DELETED'] ? '  •  ĐÃ XÓA' : ''}
+          </Text>
           <Text style={{ fontSize: 12, color: '#6C757D' }}>
             Số HSHK: {item['SOHOK']}
           </Text>

@@ -192,7 +192,10 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
   return (
     <TouchableOpacity
       style={{
-        backgroundColor: item['CRIMINALRECORD']
+        // Nhân khẩu đã xóa (DELETED): nền xám, mờ đi — ưu tiên trên mọi màu khác
+        backgroundColor: item['DELETED']
+          ? '#BDBDBD'
+          : item['CRIMINALRECORD']
           ? '#90CAF9'
           : vangNha
           ? '#FFCDD2'
@@ -211,6 +214,7 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
         shadowOpacity: 0.1,
         shadowRadius: 3,
         elevation: 2,
+        opacity: item['DELETED'] ? 0.6 : 1,
       }}
       onLongPress={() => setShowActionMenu(true)}
     >
@@ -222,7 +226,10 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
           marginBottom: 6,
         }}
       >
-        <Text style={{ fontSize: 12, color: '#6C757D' }}>STT: {index + 1}</Text>
+        <Text style={{ fontSize: 12, color: '#6C757D' }}>
+          STT: {index + 1}
+          {item['DELETED'] ? '  •  ĐÃ XÓA' : ''}
+        </Text>
 
         <Text
           style={{
