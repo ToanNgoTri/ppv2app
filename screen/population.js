@@ -18,6 +18,14 @@ import { useNetInfo } from '@react-native-community/netinfo';
 
 import MicButton from './component/MicButton.js';
 
+// Cột boolean: ô điều kiện là hai nút bấm true/false thay vì ô gõ chữ.
+// Nhãn hiển thị cho từng trạng thái.
+const BOOLEAN_LABELS = {
+  GIOITINH: { true: 'NAM', false: 'NỮ' },
+  VANGNHA: { true: 'VẮNG', false: 'KHÔNG' },
+  DELETED: { true: 'ĐÃ XÓA', false: 'CHƯA XÓA' },
+};
+
 export function Population() {
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
@@ -166,6 +174,13 @@ async function pushToSearch() {
 
   // 👉 Hàm xử lý từng filter
   const applyFilter = (query, field, value) => {
+    // ✅ Boolean fields → giá trị là true/false từ nút bấm. false lấy cả dòng
+    // NULL (danh sách vẫn hiện NULL là "Nữ"/"KHÔNG") nên dùng "is not true".
+    if (BOOLEAN_LABELS[field]) {
+      if (typeof value !== 'boolean') return query;
+      return value ? query.eq(field, true) : query.not(field, 'is', true);
+    }
+
     if (!value) return query;
 
     // ✅ SOHOK → exact
@@ -179,14 +194,6 @@ async function pushToSearch() {
       const digits = value.replace(/\D/g, "");
       if (!digits) return query;
       return query.ilike(field, `%${digits}%`);
-    }
-
-    // ✅ Boolean fields
-    if (["GIOITINH", "VANGNHA"].includes(field)) {
-      return query.eq(
-        field,
-        field === "GIOITINH" ? value === "NAM" : value === "VẮNG"
-      );
     }
 
     // ✅ Năm sinh → format + fuzzy
@@ -229,6 +236,9 @@ async function pushToSearch() {
     if (batch.length < PAGE) break; // hết dữ liệu
   }
 
+  // Nhân khẩu còn lên đầu, đã xóa xuống cuối. Sắp sau khi gom đủ các trang
+  // (sort ổn định nên thứ tự trong mỗi nhóm giữ nguyên).
+  all.sort((a, b) => Number(!!a.DELETED) - Number(!!b.DELETED));
   setSearchResult(all);
   setLoading(false);
 }
@@ -247,6 +257,7 @@ async function pushToSearch() {
     'TENCHA',
     'TENME',
     'VANGNHA',
+    'DELETED',
     'GHICHU',
   ];
 
@@ -354,6 +365,11 @@ async function pushToSearch() {
                     if (num === 1) setTitleFilter1(selectedItem);
                     if (num === 2) setTitleFilter2(selectedItem);
                     if (num === 3) setTitleFilter3(selectedItem);
+                    // Đổi giữa cột chữ và cột boolean thì giá trị cũ không
+                    // còn hợp kiểu: cột boolean mặc định true, cột chữ để trống.
+                    if (BOOLEAN_LABELS[selectedItem]) setCurrentInput(true);
+                    else if (typeof currentInput === 'boolean')
+                      setCurrentInput('');
                   }}
                   renderButton={selectedItem => (
                     <View
@@ -398,6 +414,46 @@ async function pushToSearch() {
                   }}
                 />
 
+                {BOOLEAN_LABELS[currentTitle] ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flex: 1,
+                      height: 40,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {[true, false].map(val => {
+                      const on = currentInput === val;
+                      return (
+                        <TouchableOpacity
+                          key={String(val)}
+                          onPress={() => setCurrentInput(val)}
+                          style={{
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: on ? '#00695c' : '#ccc',
+                            backgroundColor: on ? '#00b894' : '#f9f9f9',
+                            marginLeft: val ? 0 : 6,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              fontWeight: '600',
+                              color: on ? '#fff' : '#555',
+                            }}
+                          >
+                            {BOOLEAN_LABELS[currentTitle][val]}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : (
                 <View
                   style={{
                     flexDirection: 'row',
@@ -424,9 +480,7 @@ async function pushToSearch() {
                     autoCapitalize={CapitalBool}
                     keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
                     placeholder={
-                      currentTitle === 'VANGNHA'
-                        ? 'Nhập VẮNG hoặc KHÔNG'
-                        : currentTitle !== 'NAMSINH'
+                      currentTitle !== 'NAMSINH'
                         ? 'Nhập từ khóa...'
                         : "Dùng . , - hoặc viết liền để thay '/'"
                     }
@@ -440,6 +494,7 @@ async function pushToSearch() {
                     transform={text => text.toUpperCase()}
                   />
                 </View>
+                )}
               </View>
               // </View>
             );
@@ -604,7 +659,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 12,
     textAlign: 'center',
     paddingHorizontal: 0,
     paddingVertical: 0,
