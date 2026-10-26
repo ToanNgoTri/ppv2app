@@ -26,21 +26,25 @@ export function GetOneFamily() {
   const route = useRoute();
 
   const navigation = useNavigation();
+  // Hộ thường trú (population) hoặc tạm trú (tamtru) — cùng schema
+  const table = route.params.table || 'population';
   // const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
   // let data = [];
   const receiveLocation = async receive => {
     const { data, error } = await supabase
-      .from('population')
+      .from(table)
       .update({ LOCATION: receive.location }) // giá trị mới
       .eq('CCCD', receive.CCCD); // điều kiện cập nhật
   };
 
   useEffect(() => {
-    navigation.setOptions({ title: `HSHK: ${route.params.screen}` }); //đổi title
+    navigation.setOptions({
+      title: `${table === 'tamtru' ? 'Tạm trú - ' : ''}HSHK: ${route.params.screen}`,
+    }); //đổi title
     const fetchData = async () => {
       let { data: population, error } = await supabase
-        .from('population')
+        .from(table)
         .select('*')
         .eq('SOHOK', route.params.screen);
       if (error) {
@@ -51,7 +55,7 @@ export function GetOneFamily() {
       }
     };
     fetchData();
-  }, [route.params.screen, navigation]);
+  }, [route.params.screen, table, navigation]);
 
   useFocusEffect(
     useCallback(() => {

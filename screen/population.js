@@ -1,5 +1,5 @@
 import SelectDropdown from 'react-native-select-dropdown';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Text,
   TextInput,
@@ -26,7 +26,45 @@ const BOOLEAN_LABELS = {
   DELETED: { true: 'ĐÃ XÓA', false: 'CHƯA XÓA' },
 };
 
+// Hai màn trong tab "Tìm công dân": thường trú và tạm trú. Bảng tạm trú có
+// schema giống hệt bảng thường trú nên dùng chung màn tìm kiếm, chỉ khác tên bảng.
+const MODES = [
+  { key: 'thuongtru', label: 'Thường trú', table: 'population' },
+  { key: 'tamtru', label: 'Tạm trú', table: 'tamtru' },
+];
+
 export function Population() {
+  const [mode, setMode] = useState('thuongtru');
+  const listRefs = useRef({});
+
+  // Thanh tab gọi global.SearchPopulationRef để cuộn lên đầu khi bấm lại tab;
+  // chuyển lời gọi tới danh sách của màn đang hiện.
+  useEffect(() => {
+    global.SearchPopulationRef = {
+      scrollToOffset: opts => listRefs.current[mode]?.scrollToOffset(opts),
+    };
+  }, [mode]);
+
+  // Cả hai màn cùng được dựng, chỉ ẩn màn không chọn, để giữ bộ lọc và kết
+  // quả tìm khi chuyển qua lại.
+  return MODES.map(m => (
+    <View
+      key={m.key}
+      style={{ flex: 1, display: mode === m.key ? 'flex' : 'none' }}
+    >
+      <PopulationSearch
+        table={m.table}
+        mode={mode}
+        onChangeMode={setMode}
+        listRef={ref => {
+          listRefs.current[m.key] = ref;
+        }}
+      />
+    </View>
+  ));
+}
+
+function PopulationSearch({ table, mode, onChangeMode, listRef }) {
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
   const [input3, setInput3] = useState('');
@@ -42,6 +80,7 @@ export function Population() {
   const [visibleFilters, setVisibleFilters] = useState(1);
 
   const [resetKey, setResetKey] = useState(0);
+  const flatListRef = useRef(null);
 
   const insets = useSafeAreaInsets(); // lất chiều cao để manu top iphone
 
@@ -66,6 +105,7 @@ export function Population() {
           navigation.push('getOneFamily', {
             screen: item['SOHOK'],
             CCCD: item['CCCD'],
+            table,
           })
         }
         style={{
@@ -166,8 +206,7 @@ export function Population() {
     );
   }
 async function pushToSearch() {
-  global.SearchPopulationRef &&
-    global.SearchPopulationRef.scrollToOffset({ offset: 0 });
+  flatListRef.current?.scrollToOffset({ offset: 0 });
 
   Keyboard.dismiss();
   setLoading(true);
@@ -215,7 +254,7 @@ async function pushToSearch() {
 
   // 👉 Dựng query với 3 input
   const buildQuery = () => {
-    let query = supabase.from("population").select("*");
+    let query = supabase.from(table).select("*");
     query = applyFilter(query, titleFilter1, input1);
     query = applyFilter(query, titleFilter2, input2);
     query = applyFilter(query, titleFilter3, input3);
@@ -308,6 +347,47 @@ async function pushToSearch() {
           borderBottomColor: '#004d4d',
         }}
       >
+        {/* Chuyển giữa tìm thường trú và tạm trú */}
+        <View
+          style={{
+            width: '95%',
+            height: 32,
+            flexDirection: 'row',
+            marginBottom: 8,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: '#004d4d',
+            overflow: 'hidden',
+          }}
+        >
+          {MODES.map(m => {
+            const on = mode === m.key;
+            return (
+              <TouchableOpacity
+                key={m.key}
+                activeOpacity={0.8}
+                onPress={() => onChangeMode(m.key)}
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: on ? '#fff' : '#006666',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: on ? 'bold' : '500',
+                    color: on ? '#006666' : '#e0f2f1',
+                  }}
+                >
+                  {m.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
         {/* 🔍 Bộ lọc 3 dòng */}
         <View
           style={{
@@ -620,7 +700,7 @@ async function pushToSearch() {
         style={{
           paddingLeft: 20,
           paddingRight: 20,
-          marginBottom: 128 + (visibleFilters - 1) * 48 + insets.top,
+          marginBottom: 168 + (visibleFilters - 1) * 48 + insets.top,
         }}
       >
         {searchResult.length ? (
@@ -628,7 +708,8 @@ async function pushToSearch() {
             onScrollBeginDrag={() => Keyboard.dismiss()}
             // ref={()=>{FlatListToScroll}}
             ref={ref => {
-              global.SearchPopulationRef = ref;
+              flatListRef.current = ref;
+              listRef(ref);
             }}
             data={searchResult}
             renderItem={(item, index) => (

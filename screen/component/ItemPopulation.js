@@ -36,6 +36,8 @@ function ItemPopulation({ item, index, location }) {
   const saveTimeout = useRef(null);
 
   const isSelected = route?.params?.CCCD === item['CCCD'];
+  // Màn Thông tin hộ dùng chung cho thường trú (population) và tạm trú (tamtru)
+  const table = route?.params?.table || 'population';
   const isEven = index % 2 === 0;
 
   useEffect(() => {
@@ -69,7 +71,7 @@ function ItemPopulation({ item, index, location }) {
 
   async function deleteLocation() {
     const { error } = await supabase
-      .from('population')
+      .from(table)
       .update({ LOCATION: null })
       .eq('CCCD', item['CCCD']);
 
@@ -165,7 +167,7 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
 
     saveTimeout.current = setTimeout(async () => {
       const { error } = await supabase
-        .from('population')
+        .from(table)
         .update({ GHICHU: text })
         .eq('CCCD', item['CCCD']);
 
@@ -178,7 +180,7 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
     setVangNha(newValue);
 
     const { error } = await supabase
-      .from('population')
+      .from(table)
       .update({ VANGNHA: newValue })
       .eq('CCCD', item['CCCD']);
 
@@ -301,7 +303,7 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
                 }}
                 onPress={async () => {
                   const { error } = await supabase
-                    .from('population')
+                    .from(table)
                     .update({ SDT: phone })
                     .eq('CCCD', item['CCCD']);
 
