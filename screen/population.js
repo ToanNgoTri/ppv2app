@@ -33,6 +33,36 @@ const MODES = [
   { key: 'tamtru', label: 'Tạm trú', table: 'tamtru' },
 ];
 
+// Trường tìm kiếm. Bảng tạm trú không có số hộ thật, cha/mẹ, dân tộc, tôn giáo
+// (bản kết xuất không có) nên bỏ khỏi danh sách; thay bằng nơi tạm trú và ngày đến.
+const TITLE_THUONGTRU = [
+  'HOTEN',
+  'SOHOK',
+  'QUANHE',
+  'NAMSINH',
+  'GIOITINH',
+  'DANTOC',
+  'TONGIAO',
+  'CCCD',
+  'SDT',
+  'NOITHTRU',
+  'TENCHA',
+  'TENME',
+  'VANGNHA',
+  'DELETED',
+  'GHICHU',
+];
+const TITLE_TAMTRU = [
+  'HOTEN',
+  'NAMSINH',
+  'GIOITINH',
+  'CCCD',
+  'NOITAMTRU',
+  'NOITHTRU',
+  'NGAYDEN',
+  'GHICHU',
+];
+
 export function Population() {
   const [mode, setMode] = useState('thuongtru');
   const listRefs = useRef({});
@@ -65,6 +95,8 @@ export function Population() {
 }
 
 function PopulationSearch({ table, mode, onChangeMode, listRef }) {
+  const laTamTru = table === 'tamtru';
+
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
   const [input3, setInput3] = useState('');
@@ -144,9 +176,11 @@ function PopulationSearch({ table, mode, onChangeMode, listRef }) {
             STT: {index}
             {item['DELETED'] ? '  •  ĐÃ XÓA' : ''}
           </Text>
-          <Text style={{ fontSize: 12, color: '#6C757D' }}>
-            Số HSHK: {item['SOHOK']}
-          </Text>
+          {!laTamTru && (
+            <Text style={{ fontSize: 12, color: '#6C757D' }}>
+              Số HSHK: {item['SOHOK']}
+            </Text>
+          )}
         </View>
 
         {/* Họ tên nổi bật */}
@@ -167,19 +201,33 @@ function PopulationSearch({ table, mode, onChangeMode, listRef }) {
           <Text style={styles.infoText}>
             Giới tính: {item['GIOITINH'] ? 'Nam' : 'Nữ'}
           </Text>
-          <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
-          <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
-          <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
-          <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
-          <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
-          <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
-          <Text style={styles.infoText}>
-            Nơi ở hiện tại: {item['NOIOHIENTAI']}
-          </Text>
-          <Text style={styles.infoText}>
-            VẮNG NHÀ: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
-          </Text>
-          {item['SDT'] && (
+          {laTamTru ? (
+            <>
+              <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
+              <Text style={styles.infoText}>Ngày đến: {item['NGAYDEN']}</Text>
+              <Text style={styles.infoText}>
+                Nơi tạm trú: {item['NOITAMTRU']}
+              </Text>
+              <Text style={styles.infoText}>Thường trú: {item['NOITHTRU']}</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
+              <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
+              <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
+              <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
+              <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
+              <Text style={styles.infoText}>Địa chỉ: {item['NOITHTRU']}</Text>
+              <Text style={styles.infoText}>
+                Nơi ở hiện tại: {item['NOIOHIENTAI']}
+              </Text>
+              <Text style={styles.infoText}>
+                VẮNG NHÀ: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
+              </Text>
+            </>
+          )}
+          {/* Tạm trú không theo dõi SĐT, vắng nhà */}
+          {!laTamTru && !!item['SDT'] && (
             <Text
               style={{
                 ...styles.infoText,
@@ -235,8 +283,8 @@ async function pushToSearch() {
       return query.ilike(field, `%${digits}%`);
     }
 
-    // ✅ Năm sinh → format + fuzzy
-    if (field === "NAMSINH") {
+    // ✅ Năm sinh / ngày đến (cùng dạng DD/MM/YYYY) → format + fuzzy
+    if (field === "NAMSINH" || field === "NGAYDEN") {
       const formatted = value.match(/\.|,|-/gim)
         ? value.replace(/\.|,|-/gim, "/")
         : value.length <= 4
@@ -282,23 +330,7 @@ async function pushToSearch() {
   setLoading(false);
 }
 
-  const title = [
-    'HOTEN',
-    'SOHOK',
-    'QUANHE',
-    'NAMSINH',
-    'GIOITINH',
-    'DANTOC',
-    'TONGIAO',
-    'CCCD',
-    'SDT',
-    'NOITHTRU',
-    'TENCHA',
-    'TENME',
-    'VANGNHA',
-    'DELETED',
-    'GHICHU',
-  ];
+  const title = laTamTru ? TITLE_TAMTRU : TITLE_THUONGTRU;
 
 
     const callPhone = phone => {
@@ -417,13 +449,13 @@ async function pushToSearch() {
             const setCurrentInput =
               num === 1 ? setInput1 : num === 2 ? setInput2 : setInput3;
 
-            const keyboardType = ['NAMSINH', 'CCCD', 'SDT'].includes(
+            const keyboardType = ['NAMSINH', 'NGAYDEN', 'CCCD', 'SDT'].includes(
               currentTitle,
             )
               ? 'numeric'
               : 'default';
 
-            const CapitalBool = ['NAMSINH', 'SDT'].includes(currentTitle)
+            const CapitalBool = ['NAMSINH', 'NGAYDEN', 'SDT'].includes(currentTitle)
               ? 'none'
               : 'characters';
 
@@ -560,7 +592,7 @@ async function pushToSearch() {
                     autoCapitalize={CapitalBool}
                     keyboardType={keyboardType} // ✅ tự đổi theo titleFilter
                     placeholder={
-                      currentTitle !== 'NAMSINH'
+                      !['NAMSINH', 'NGAYDEN'].includes(currentTitle)
                         ? 'Nhập từ khóa...'
                         : "Dùng . , - hoặc viết liền để thay '/'"
                     }

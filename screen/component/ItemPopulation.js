@@ -38,6 +38,7 @@ function ItemPopulation({ item, index, location }) {
   const isSelected = route?.params?.CCCD === item['CCCD'];
   // Màn Thông tin hộ dùng chung cho thường trú (population) và tạm trú (tamtru)
   const table = route?.params?.table || 'population';
+  const laTamTru = table === 'tamtru';
   const isEven = index % 2 === 0;
 
   useEffect(() => {
@@ -233,7 +234,8 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
           {item['DELETED'] ? '  •  ĐÃ XÓA' : ''}
         </Text>
 
-        <Text
+        {/* Tạm trú chỉ biết ai là chủ hộ — người khác để trống thì khỏi hiện */}
+        {(!laTamTru || !!item['QUANHE']) && <Text
           style={{
             fontSize: 13,
             fontWeight: item['QUANHE'] === 'CH' ? '700' : '500',
@@ -245,7 +247,7 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
           }}
         >
           Quan hệ: {item['QUANHE']}
-        </Text>
+        </Text>}
       </View>
 
       {/* Họ và tên */}
@@ -266,19 +268,35 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
         <Text style={styles.infoText}>
           Giới tính: {item['GIOITINH'] === true ? 'Nam' : 'Nữ'}
         </Text>
-        <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
-        <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
-        <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
-        <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
+        {/* Tạm trú không có cha/mẹ, dân tộc, tôn giáo (bản kết xuất không có) */}
+        {!laTamTru && (
+          <>
+            <Text style={styles.infoText}>Cha: {item['TENCHA']}</Text>
+            <Text style={styles.infoText}>Mẹ: {item['TENME']}</Text>
+            <Text style={styles.infoText}>Dân tộc: {item['DANTOC']}</Text>
+            <Text style={styles.infoText}>Tôn giáo: {item['TONGIAO']}</Text>
+          </>
+        )}
         <Text style={styles.infoText}>CCCD: {item['CCCD']}</Text>
+        {laTamTru && (
+          <Text style={styles.infoText}>Ngày đến: {item['NGAYDEN']}</Text>
+        )}
+        {/* Tạm trú không theo dõi vắng nhà, SĐT */}
+        {!laTamTru && (
+          <Text style={styles.infoText}>
+            Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
+          </Text>
+        )}
         <Text style={styles.infoText}>
-          Vắng nhà: {item['VANGNHA'] ? 'VẮNG' : 'KHÔNG'}
+          {laTamTru
+            ? `Nơi tạm trú: ${item['NOITAMTRU'] ?? ''}`
+            : `Nơi ở hiện tại: ${item['NOIOHIENTAI'] ?? ''}`}
         </Text>
-        <Text style={styles.infoText}>
-          Nơi ở hiện tại: {item['NOIOHIENTAI']}
-        </Text>
+        {laTamTru && (
+          <Text style={styles.infoText}>Thường trú: {item['NOITHTRU']}</Text>
+        )}
 
-        {isEditingPhone ? (
+        {laTamTru ? null : isEditingPhone ? (
           <View style={{ width: '100%', marginTop: 8 }}>
             <TextInput
               value={phone}
@@ -459,28 +477,32 @@ Sai số khoảng ${Math.round(result.accuracy)}m`
                 <Text style={styles.menuButtonText}>➕ Thêm đối tượng</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.menuButton}
-                onPress={() => {
-                  toggleVangNha();
-                  setShowActionMenu(false);
-                }}
-              >
-                <Text style={styles.menuButtonText}>
-                  {item['VANGNHA'] ? '✓ Bỏ' : '⚠️ Đánh dấu'} vắng nhà
-                </Text>
-              </TouchableOpacity>
+              {!laTamTru && (
+                <>
+                  <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => {
+                      toggleVangNha();
+                      setShowActionMenu(false);
+                    }}
+                  >
+                    <Text style={styles.menuButtonText}>
+                      {item['VANGNHA'] ? '✓ Bỏ' : '⚠️ Đánh dấu'} vắng nhà
+                    </Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.menuButton}
-                onPress={() => {
-                  setPhone(item?.SDT || '');
-                  setIsEditingPhone(true);
-                  setShowActionMenu(false);
-                }}
-              >
-                <Text style={styles.menuButtonText}>📞 Cập nhật SĐT</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => {
+                      setPhone(item?.SDT || '');
+                      setIsEditingPhone(true);
+                      setShowActionMenu(false);
+                    }}
+                  >
+                    <Text style={styles.menuButtonText}>📞 Cập nhật SĐT</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </ScrollView>
 
             <TouchableOpacity

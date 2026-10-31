@@ -40,7 +40,9 @@ export function GetOneFamily() {
 
   useEffect(() => {
     navigation.setOptions({
-      title: `${table === 'tamtru' ? 'Tạm trú - ' : ''}HSHK: ${route.params.screen}`,
+      // Tạm trú không có số HSHK thật (SOHOK chỉ là CCCD chủ hộ dựng ra để gom hộ)
+      title:
+        table === 'tamtru' ? 'Hộ tạm trú' : `HSHK: ${route.params.screen}`,
     }); //đổi title
     const fetchData = async () => {
       let { data: population, error } = await supabase
@@ -89,16 +91,23 @@ export function GetOneFamily() {
           paddingBottom: 5,
         }}
       >
-        <Text
-          style={{
-            display: 'flex',
-            fontWeight: 'bold',
-          }}
-        >
-          Số HSHK {route.params.screen}
-        </Text>
-        <Text style={{ fontWeight: 'bold' }}>
-          Địa chỉ: {searchResult[0] && searchResult[0]['NOITHTRU']}
+        {table !== 'tamtru' && (
+          <Text
+            style={{
+              display: 'flex',
+              fontWeight: 'bold',
+              marginRight: 10,
+            }}
+          >
+            Số HSHK {route.params.screen}
+          </Text>
+        )}
+        {/* flexShrink để địa chỉ dài xuống dòng thay vì tràn ra ngoài màn hình */}
+        <Text style={{ fontWeight: 'bold', flexShrink: 1 }}>
+          {/* Hộ tạm trú: địa chỉ là chỗ đang tạm trú, không phải thường trú ở quê */}
+          {table === 'tamtru' ? 'Nơi tạm trú' : 'Địa chỉ'}:{' '}
+          {searchResult[0] &&
+            searchResult[0][table === 'tamtru' ? 'NOITAMTRU' : 'NOITHTRU']}
         </Text>
       </View>
       <View
